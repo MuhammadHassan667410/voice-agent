@@ -265,20 +265,26 @@
   </div>
 
   <!-- ========================================== -->
-  <!-- VAPI WEB SDK (UMD Build for Custom UI)     -->
+  <!-- VAPI WEB SDK (Official CDN Build)          -->
   <!-- ========================================== -->
   <script>
     (function(d, t) {
       var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
-      g.src = 'https://cdn.jsdelivr.net/gh/balacodeio/Vapi-Web-UMD@latest/dist/latest/vapi-web-bundle.min.js';
+      g.src = 'https://unpkg.com/@vapi-ai/web/dist/vapi.min.js';
       g.defer = true;
       g.async = true;
       s.parentNode.insertBefore(g, s);
 
       g.onload = function() {
-        if (typeof Vapi === 'function') {
+        // The official unpkg build exposes the constructor on window.vapi or window.Vapi
+        if (typeof window.Vapi === 'function' || typeof window.vapi === 'function') {
           window.evAiInit();
+        } else {
+          console.error('[EvangelistaAI] FATAL: Vapi constructor not found after CDN load.');
         }
+      };
+      g.onerror = function() {
+        console.error('[EvangelistaAI] FATAL: Failed to load Vapi SDK from CDN.');
       };
     })(document, 'script');
   </script>
@@ -682,9 +688,11 @@
       };
 
       // --------------------------------------
-      // 6. VAPI SDK
+      // 6. VAPI SDK & PERMISSIONS
       // --------------------------------------
-      var vapiInstance = new Vapi(EV_VAPI_PUBLIC_KEY);
+      // The official unpkg script exports a 'Vapi' constructor class on window
+      var VapiConstructor = typeof window.Vapi === 'function' ? window.Vapi : window.vapi;
+      var vapiInstance = new VapiConstructor(EV_VAPI_PUBLIC_KEY);
       window.vapiInstance = vapiInstance;
 
       vapiInstance.on('call-start', function() {
@@ -697,8 +705,17 @@
       vapiInstance.on('call-end', function() {
         state.isCallActive = false;
         state.vapiStatus = 'disconnected';
-        state.isPanelOpen = false;
+        state.transcript = 'Call ended.';
         render();
+      });
+
+      vapiInstance.on('error', function(error) {
+        console.error('[EvangelistaAI] Vapi encountered an error:', error);
+        state.isCallActive = false;
+        state.vapiStatus = 'disconnected';
+        state.transcript = 'Error connecting. Please try again.';
+        render();
+        showToast('Microphone or connection error. Please refresh and allow mic access.', 'error');
       });
 
       vapiInstance.on('speech-start', function() { state.vapiStatus = 'speaking'; render(); });
@@ -761,12 +778,15 @@
       });
 
       // --------------------------------------
-      // 7. EVENTS
+      // 7. EVENTS & LAUNCHER
       // --------------------------------------
       els.launcherBtn.addEventListener('click', function() {
         if (state.isCallActive) {
           vapiInstance.stop();
         } else {
+          // Start the call synchronously to satisfy iOS/Safari Web Audio requirements.
+          // Vapi's internal Daily.co SDK will handle microphone permissions and
+          // emit an 'error' event if denied.
           state.vapiStatus = 'connecting';
           state.isCallActive = true;
           state.transcript = 'Connecting to John...';
