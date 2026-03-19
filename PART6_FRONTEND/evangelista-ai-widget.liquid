@@ -265,28 +265,23 @@
   </div>
 
   <!-- ========================================== -->
-  <!-- VAPI WEB SDK (Official CDN Build)          -->
+  <!-- VAPI WEB SDK (ESM Module via jsDelivr)     -->
   <!-- ========================================== -->
-  <script>
-    (function(d, t) {
-      var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
-      g.src = 'https://unpkg.com/@vapi-ai/web/dist/vapi.min.js';
-      g.defer = true;
-      g.async = true;
-      s.parentNode.insertBefore(g, s);
-
-      g.onload = function() {
-        // The official unpkg build exposes the constructor on window.vapi or window.Vapi
-        if (typeof window.Vapi === 'function' || typeof window.vapi === 'function') {
+  <script type="module">
+    import Vapi from "https://cdn.jsdelivr.net/npm/@vapi-ai/web@2.5.2/+esm";
+    // ESM sometimes exports default as the main object, handle both cases
+    window.Vapi = Vapi.default || Vapi;
+    if (typeof window.evAiInit === 'function') {
+      window.evAiInit();
+    } else {
+      // Wait a moment for main script to define evAiInit
+      var checkInterval = setInterval(function() {
+        if (typeof window.evAiInit === 'function') {
+          clearInterval(checkInterval);
           window.evAiInit();
-        } else {
-          console.error('[EvangelistaAI] FATAL: Vapi constructor not found after CDN load.');
         }
-      };
-      g.onerror = function() {
-        console.error('[EvangelistaAI] FATAL: Failed to load Vapi SDK from CDN.');
-      };
-    })(document, 'script');
+      }, 50);
+    }
   </script>
 
   <!-- ========================================== -->
@@ -690,9 +685,12 @@
       // --------------------------------------
       // 6. VAPI SDK & PERMISSIONS
       // --------------------------------------
-      // The official unpkg script exports a 'Vapi' constructor class on window
-      var VapiConstructor = typeof window.Vapi === 'function' ? window.Vapi : window.vapi;
-      var vapiInstance = new VapiConstructor(EV_VAPI_PUBLIC_KEY);
+      if (typeof window.Vapi !== 'function') {
+        console.error('[EvangelistaAI] FATAL: window.Vapi is not a constructor.', window.Vapi);
+        return;
+      }
+
+      var vapiInstance = new window.Vapi(EV_VAPI_PUBLIC_KEY);
       window.vapiInstance = vapiInstance;
 
       vapiInstance.on('call-start', function() {
