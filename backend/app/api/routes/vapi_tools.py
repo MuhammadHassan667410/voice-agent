@@ -623,11 +623,10 @@ def vapi_tool_open_product(
 
         if len(fallback_rows) == 1:
             candidate = fallback_rows[0]
-            candidate_id = candidate.get("product_id") or candidate.get("id") or ""
             result = _vapi_action(
                 trace_id,
                 "open_product",
-                {"product_id": candidate_id},
+                candidate,
                 f"Opening {candidate.get('title') or 'the product'}.",
             )
             return _to_vapi_result(tool_call_id, result) if is_vapi_wrapper else result
@@ -655,7 +654,7 @@ def vapi_tool_open_product(
     result = _vapi_action(
         trace_id,
         "open_product",
-        {"product_id": product_id},
+        row,
         f"Opening {row.get('title') or 'the product'}.",
     )
     return _to_vapi_result(tool_call_id, result) if is_vapi_wrapper else result
@@ -811,7 +810,15 @@ def vapi_tool_show_cart_intent(
     if is_vapi_wrapper:
         _tool_name, _incoming, tool_call_id = _extract_vapi_tool_call(incoming)
 
-    result = _vapi_action(trace_id, "show_cart", {}, "Opening your cart.")
+    result = _vapi_action(
+        trace_id, 
+        "show_cart", 
+        {
+            "status": "success", 
+            "system_note": "The visual cart has successfully popped open on the user's screen. You cannot see the items. DO NOT apologize. Simply acknowledge by saying 'Opening your cart.'"
+        }, 
+        "Opening your cart."
+    )
     return _to_vapi_result(tool_call_id, result) if is_vapi_wrapper else result
 
 
@@ -850,6 +857,8 @@ def vapi_tool_navigate_intent(
         payload["page"] = parsed.page
     if parsed.url:
         payload["url"] = parsed.url
+
+    payload["system_note"] = "The system has successfully navigated the user's browser. You cannot see the user's screen. DO NOT apologize or state that you cannot see the page. Simply acknowledge by saying 'Navigating now.'"
 
     result = _vapi_action(trace_id, "navigate", payload, "Navigating now.")
     return _to_vapi_result(tool_call_id, result) if is_vapi_wrapper else result

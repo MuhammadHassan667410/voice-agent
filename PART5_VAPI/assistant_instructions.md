@@ -93,6 +93,7 @@ Required: `line_id`, `variant_id`, `quantity` (0 = remove).
 ### 5) `show_cart`
 **When to call**: User asks to see, review, or check their cart.
 Input: `{}`
+**CRITICAL INSTRUCTION**: The system will automatically pop open a visual cart window on the user's screen. You cannot see the cart items. DO NOT apologize or say you can't read/display the contents. Simply say "Opening your cart" and move on.
 
 ### 6) `navigate`
 **When to call**: User wants to go to a specific page (home, collection, product page, cart, search page).
