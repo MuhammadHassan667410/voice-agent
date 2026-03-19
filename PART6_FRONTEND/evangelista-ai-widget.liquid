@@ -1,6 +1,6 @@
 <!-- 
   ===========================================
-  EVANGELISTA SPORTS AI VOICE WIDGET (GLASSMORPHISM)
+  EVANGELISTA SPORTS AI VOICE WIDGET (MINIMAL DOM SIDE PANEL)
   ===========================================
   File: snippets/evangelista-ai-widget.liquid
 -->
@@ -11,7 +11,7 @@
 
     #ev-ai-root {
       --ev-font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      --ev-panel-bg: linear-gradient(155deg, rgba(26, 30, 36, 0.85) 0%, rgba(15, 18, 22, 0.98) 100%);
+      --ev-panel-bg: linear-gradient(155deg, rgba(26, 30, 36, 0.95) 0%, rgba(15, 18, 22, 0.98) 100%);
       --ev-panel-border: rgba(255, 255, 255, 0.08);
       --ev-text-main: #ffffff;
       --ev-text-muted: #8b96a5;
@@ -32,17 +32,17 @@
     }
 
     /* -------------------------------------- */
-    /* 1. THE LAUNCHER CONTAINER & TOOLTIP    */
+    /* 1. THE LAUNCHER CONTAINER (THE ORB)    */
     /* -------------------------------------- */
     .ev-ai-launcher-wrapper {
       position: fixed;
       bottom: 24px; right: 24px;
       z-index: var(--ev-z);
       display: flex; flex-direction: column; align-items: flex-end; gap: 12px;
-      transition: opacity 0.3s, transform 0.3s;
     }
 
-    .ev-ai-tooltip {
+    /* Small transcript bubble above orb */
+    .ev-ai-transcript-bubble {
       background: var(--ev-panel-bg);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
@@ -53,44 +53,37 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       font-size: 13px;
       max-width: 250px;
-      text-align: center;
-      transition: all 0.3s ease;
-      transform-origin: bottom right;
-      cursor: default;
+      text-align: right;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      transform: translateY(10px);
+    }
+    .ev-ai-transcript-bubble.ev-visible {
+      opacity: 1;
+      transform: translateY(0);
     }
 
-    .ev-ai-tooltip-title {
-      font-weight: 600;
-      color: var(--ev-text-main);
-    }
-
-    .ev-ai-tooltip-desc {
-      display: none;
+    .ev-ai-status-indicator {
+      font-size: 10px;
       color: var(--ev-text-muted);
-      margin-top: 8px;
-      line-height: 1.4;
-      font-size: 12px;
-      text-align: left;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
     }
 
-    /* Hover State over the wrapper */
-    .ev-ai-launcher-wrapper:hover .ev-ai-tooltip {
-      padding: 16px;
-    }
-    .ev-ai-launcher-wrapper:hover .ev-ai-tooltip-title {
-      text-align: left;
-      font-size: 14px;
-    }
-    .ev-ai-launcher-wrapper:hover .ev-ai-tooltip-desc {
-      display: block;
-      animation: ev-fade-in 0.3s ease forwards;
+    .ev-ai-status-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--ev-accent); box-shadow: 0 0 8px var(--ev-accent);
     }
 
-    @keyframes ev-fade-in { from { opacity: 0; } to { opacity: 1; } }
-
-    /* The floating button itself */
+    /* The floating orb button itself */
     .ev-ai-launcher-btn {
-      width: 60px; height: 60px;
+      width: 64px; height: 64px;
       border-radius: 50%;
       background: var(--ev-panel-bg);
       backdrop-filter: blur(16px);
@@ -100,127 +93,45 @@
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: all 0.3s ease;
+      position: relative;
     }
-
-    .ev-ai-launcher-wrapper:hover .ev-ai-launcher-btn {
+    .ev-ai-launcher-btn:hover {
       transform: translateY(-2px) scale(1.05);
       border-color: var(--ev-accent);
       box-shadow: 0 12px 40px var(--ev-accent-glow);
     }
-
-    .ev-ai-launcher-btn svg {
-      width: 28px; height: 28px;
+    .ev-ai-launcher-btn svg { width: 32px; height: 32px; transition: opacity 0.3s; }
+    
+    /* Recording / Listening State for Orb */
+    .ev-ai-launcher-btn.ev-listening {
+      border-color: #00f2fe;
+      box-shadow: 0 0 30px rgba(0, 242, 254, 0.4);
     }
-
-    /* -------------------------------------- */
-    /* 2. THE GLASS PANEL                     */
-    /* -------------------------------------- */
-    .ev-ai-panel {
-      position: fixed;
-      bottom: 24px; right: -400px;
-      width: 360px; 
-      height: 780px;
-      max-height: 85vh;
-      border-radius: 4px;
-      background: var(--ev-panel-bg);
-      backdrop-filter: blur(30px);
-      -webkit-backdrop-filter: blur(30px);
-      border: 1px solid var(--ev-panel-border);
-      box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
-      z-index: var(--ev-z);
-      display: flex; flex-direction: column;
-      overflow: hidden;
+    .ev-ai-launcher-btn.ev-speaking {
+      border-color: var(--ev-accent);
+      box-shadow: 0 0 30px var(--ev-accent-glow);
+    }
+    
+    /* Close icon inside orb */
+    .ev-ai-close-icon {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
       opacity: 0;
-      pointer-events: none;
-      transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+      width: 24px !important; height: 24px !important;
     }
-    .ev-ai-panel.ev-open {
-      right: 24px;
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    /* Hide scrollbars */
-    .ev-ai-panel-inner {
-      flex: 1; overflow-y: auto; 
-      padding: 28px 24px 20px 24px; /* Increased top padding to prevent clipping from border-radius */
-      display: flex; flex-direction: column; gap: 24px;
-    }
-    .ev-ai-panel-inner::-webkit-scrollbar { display: none; }
-
-    /* -------------------------------------- */
-    /* 3. TOP HEADER ROW                      */
-    /* -------------------------------------- */
-    .ev-ai-header-bar {
-      display: flex; justify-content: space-between; align-items: center;
-      color: var(--ev-text-muted); font-size: 14px; font-weight: 500;
-      margin-top: 6px; /* Extra push away from curve */
-    }
-    .ev-ai-brand { display: flex; align-items: center; gap: 6px; }
-    .ev-ai-brand svg { width: 18px; height: 18px; }
+    .ev-ai-launcher-btn.ev-active .ev-ai-mic-icon { opacity: 0; }
+    .ev-ai-launcher-btn.ev-active .ev-ai-close-icon { opacity: 1; }
     
-    .ev-ai-actions { display: flex; gap: 12px; align-items: center; }
-    .ev-ai-actions svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; cursor: pointer;}
-    .ev-ai-actions button { background: none; border: none; color: inherit; font-size: 20px; cursor: pointer; line-height: 1; padding: 0 4px;}
-    .ev-ai-actions button:hover, .ev-ai-actions svg:hover { color: var(--ev-text-main); }
-
-    /* -------------------------------------- */
-    /* 4. TITLE ROW & STATUS                  */
-    /* -------------------------------------- */
-    .ev-ai-title-row {
-      display: flex; justify-content: space-between; align-items: center;
+    /* Orb mini visualizer */
+    .ev-ai-mini-bars {
+      position: absolute;
+      bottom: -10px;
+      display: flex; gap: 2px; height: 12px; align-items: center; margin: 4px 0;
+      opacity: 0;
+      transition: opacity 0.3s;
     }
-    .ev-ai-title-row h2 {
-      font-size: 18px; font-weight: 600; color: var(--ev-text-main);
-    }
-    .ev-ai-status-badge {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
-      color: var(--ev-accent); background: rgba(31, 223, 100, 0.1);
-      padding: 4px 8px; border-radius: 20px;
-    }
-    .ev-ai-status-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--ev-accent); box-shadow: 0 0 8px var(--ev-accent);
-    }
-
-    /* -------------------------------------- */
-    /* 5. THE ORB (LISTENING VISUALIZER)      */
-    /* -------------------------------------- */
-    .ev-ai-orb-wrapper {
-      display: flex; flex-direction: column; align-items: center; gap: 16px;
-      margin: 10px 0;
-    }
-    
-    .ev-ai-orb {
-      position: relative;
-      width: 140px; height: 140px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(10, 15, 20, 0.5); 
-      box-shadow: inset 0 0 20px rgba(0, 242, 254, 0.1);
-    }
-    
-    .ev-ai-orb::before {
-      content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
-      border-radius: 50%; z-index: -1;
-      background: var(--ev-orb-gradient);
-      box-shadow: 0 0 30px rgba(0, 242, 254, 0.2);
-    }
-
-    .ev-ai-orb-inner {
-      width: calc(100% - 4px); height: calc(100% - 4px);
-      background: var(--ev-panel-bg);
-      border-radius: 50%;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 6px;
-    }
-
-    .ev-ai-orb-text {
-      font-size: 10px; font-weight: 600; letter-spacing: 1px; color: var(--ev-text-muted);
-    }
-
-    .ev-ai-mini-bars { display: flex; gap: 2px; height: 12px; align-items: center; margin: 4px 0; }
+    .ev-ai-launcher-btn.ev-active .ev-ai-mini-bars { opacity: 1; }
     .ev-ai-mini-bar { width: 2px; background: #00f2fe; border-radius: 2px; animation: ev-mini-bounce 0.8s infinite ease-in-out; }
     .ev-ai-mini-bar:nth-child(1) { height: 4px; animation-delay: 0s; }
     .ev-ai-mini-bar:nth-child(2) { height: 8px; animation-delay: 0.1s; }
@@ -230,202 +141,133 @@
 
     @keyframes ev-mini-bounce { 0%, 100% { transform: scaleY(0.5); } 50% { transform: scaleY(1); } }
 
-    .ev-ai-orb-icon { width: 20px; height: 20px; stroke: var(--ev-text-muted); stroke-width: 2; fill: none;}
-    .ev-ai-help-text { font-size: 13px; color: var(--ev-text-muted); text-align: center; }
-
     /* -------------------------------------- */
-    /* 6. PRODUCT RECOMMENDATIONS GRID        */
+    /* 2. THE SIDE PANEL (DOM INJECTION)      */
     /* -------------------------------------- */
-    .ev-ai-recs { display: flex; flex-direction: column; gap: 12px; }
-    .ev-ai-recs h3 { font-size: 12px; font-weight: 600; color: var(--ev-text-main); }
-    
-    .ev-ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .ev-ai-side-panel {
+      position: fixed;
+      top: 0; right: -400px;
+      width: 400px;
+      height: 100vh;
+      max-width: 100vw;
+      background: var(--ev-panel-bg);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border-left: 1px solid var(--ev-panel-border);
+      box-shadow: -10px 0 40px rgba(0,0,0,0.5);
+      z-index: calc(var(--ev-z) - 1); /* Just behind the orb */
+      display: flex; flex-direction: column;
+      transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ev-ai-side-panel.ev-open {
+      right: 0;
+    }
 
+    .ev-ai-panel-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--ev-panel-border);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .ev-ai-panel-header h2 {
+      font-size: 16px; font-weight: 600; color: var(--ev-text-main);
+    }
+    .ev-ai-close-panel-btn {
+      background: none; border: none; color: var(--ev-text-muted); font-size: 24px; cursor: pointer;
+    }
+    .ev-ai-close-panel-btn:hover { color: var(--ev-text-main); }
+
+    .ev-ai-panel-content {
+      flex: 1; overflow-y: auto;
+      padding: 20px;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .ev-ai-panel-content::-webkit-scrollbar { width: 6px; }
+    .ev-ai-panel-content::-webkit-scrollbar-track { background: transparent; }
+    .ev-ai-panel-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+    /* Product Grid / Details inside Side Panel */
     .ev-ai-product-card {
       background: var(--ev-card-bg);
       border: 1px solid var(--ev-card-border);
-      border-radius: 16px; padding: 10px;
-      display: flex; flex-direction: column; gap: 10px;
+      border-radius: 12px; padding: 12px;
+      display: flex; gap: 12px;
       transition: background 0.2s;
     }
     .ev-ai-product-card:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); }
-
     .ev-ai-img-box {
-      width: 100%; aspect-ratio: 1; border-radius: 12px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
-      display: flex; align-items: center; justify-content: center; padding: 10px;
+      width: 80px; height: 80px; border-radius: 8px; flex-shrink: 0;
+      background: rgba(255,255,255,0.05);
+      display: flex; align-items: center; justify-content: center; padding: 4px;
     }
-    .ev-ai-img-box img { max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5)); }
-
-    .ev-ai-card-info { display: flex; flex-direction: column; gap: 4px; }
-    .ev-ai-card-title { font-size: 11px; font-weight: 500; color: var(--ev-text-main); line-height: 1.3; font-family: var(--ev-font); }
-    .ev-ai-card-price { font-size: 11px; color: var(--ev-text-muted); margin-bottom: 4px; font-family: var(--ev-font);}
-
-    .ev-ai-actions-row { display: flex; align-items: center; gap: 6px; }
-    .ev-ai-btn-add {
-      flex: 1; padding: 8px 0; border: none; border-radius: 20px;
-      background: var(--ev-accent); color: #000; font-size: 10px; font-weight: 700;
-      letter-spacing: 0.5px; cursor: pointer; transition: opacity 0.2s; font-family: var(--ev-font);
-    }
-    .ev-ai-btn-add:hover { opacity: 0.8; box-shadow: 0 0 10px var(--ev-accent-glow); }
+    .ev-ai-img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .ev-ai-card-info { display: flex; flex-direction: column; justify-content: center; gap: 4px; flex: 1; }
+    .ev-ai-card-title { font-size: 13px; font-weight: 500; color: var(--ev-text-main); line-height: 1.3; }
+    .ev-ai-card-price { font-size: 12px; color: var(--ev-text-muted); }
     
-    .ev-ai-btn-star {
-      width: 28px; height: 28px; border-radius: 50%;
-      background: rgba(255,255,255,0.1); border: none; color: var(--ev-text-muted);
-      display: flex; align-items: center; justify-content: center; cursor: pointer;
+    .ev-ai-btn-primary {
+      padding: 10px 0; border: none; border-radius: 8px;
+      background: var(--ev-accent); color: #000; font-size: 12px; font-weight: 700;
+      letter-spacing: 0.5px; cursor: pointer; transition: opacity 0.2s; width: 100%; text-align: center;
     }
-    .ev-ai-btn-star svg { width: 12px; height: 12px; fill: currentColor; }
-    .ev-ai-btn-star:hover { color: var(--ev-text-main); background: rgba(255,255,255,0.2); }
+    .ev-ai-btn-primary:hover { opacity: 0.8; box-shadow: 0 0 10px var(--ev-accent-glow); }
 
-    /* -------------------------------------- */
-    /* 7. BOTTOM WAVE & RECORDING STATUS      */
-    /* -------------------------------------- */
-    .ev-ai-bottom-glass {
-      border-top: 1px solid var(--ev-panel-border);
-      padding: 16px 24px;
-      background: rgba(15, 18, 22, 0.4);
-      display: flex; flex-direction: column; gap: 12px;
+    .ev-ai-btn-secondary {
+      padding: 8px 12px; border: 1px solid var(--ev-panel-border); border-radius: 8px;
+      background: transparent; color: var(--ev-text-main); font-size: 11px;
+      cursor: pointer; transition: background 0.2s;
     }
+    .ev-ai-btn-secondary:hover { background: rgba(255,255,255,0.1); }
 
-    .ev-ai-big-wave {
-      width: 100%; height: 40px;
-      display: flex; align-items: center; justify-content: space-between; gap: 2px;
-    }
-    .ev-ai-big-wave-bar {
-      flex: 1; border-radius: 2px;
-      background: linear-gradient(180deg, #00f2fe 0%, #a200ff 100%);
-      opacity: 0.8;
-      animation: ev-big-bounce 1.2s infinite ease-in-out alternate;
-    }
-    .ev-ai-big-wave-bar:nth-child(2n) { background: linear-gradient(180deg, #1fdf64 0%, #00f2fe 100%); height: 80%; animation-duration: 0.9s; }
-    .ev-ai-big-wave-bar:nth-child(3n) { height: 50%; animation-duration: 1.5s; }
-    .ev-ai-big-wave-bar:nth-child(4n) { height: 90%; animation-duration: 1.1s; }
-    .ev-ai-big-wave-bar:nth-child(5n) { height: 40%; animation-duration: 0.8s; }
-
-    @keyframes ev-big-bounce { 0% { transform: scaleY(0.2); } 100% { transform: scaleY(1); } }
-
-    .ev-ai-recording-status {
-      display: flex; justify-content: space-between; align-items: center;
-      font-size: 11px; color: var(--ev-text-muted); font-weight: 500; letter-spacing: 0.5px;
-    }
-    .ev-ai-rec-text { display: flex; align-items: center; gap: 6px; }
   </style>
 
   <!-- ========================================== -->
-  <!-- LAUNCHER CONTAINER & TOOLTIP                 -->
+  <!-- LAUNCHER CONTAINER (ORB)                   -->
   <!-- ========================================== -->
   <div id="ev-ai-launcher-wrapper" class="ev-ai-launcher-wrapper">
-    <div class="ev-ai-tooltip">
-      <div class="ev-ai-tooltip-title">Talk to John</div>
-      <div class="ev-ai-tooltip-desc">He can help you find gear, recommend products, and instantly add items to your cart via voice.</div>
+
+    <div id="ev-ai-transcript-bubble" class="ev-ai-transcript-bubble">
+      <div class="ev-ai-status-indicator" id="ev-ai-status-indicator">
+        READY <span class="ev-ai-status-dot" style="background:#8b96a5;box-shadow:none;"></span>
+      </div>
+      <div id="ev-ai-transcript-text" style="line-height:1.4;">Tap the orb to start talking!</div>
     </div>
     
-    <button class="ev-ai-launcher-btn" aria-label="Open AI Assistant">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <polygon points="12 7 16 10 14.5 15 9.5 15 8 10"></polygon>
-        <line x1="12" y1="7" x2="12" y2="2"></line>
-        <line x1="16" y1="10" x2="21.5" y2="8.5"></line>
-        <line x1="14.5" y1="15" x2="18.5" y2="19.5"></line>
-        <line x1="9.5" y1="15" x2="5.5" y2="19.5"></line>
-        <line x1="8" y1="10" x2="2.5" y2="8.5"></line>
+    <button id="ev-ai-launcher-btn" class="ev-ai-launcher-btn" aria-label="Open AI Assistant">
+      <svg class="ev-ai-mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+        <line x1="12" y1="19" x2="12" y2="22"></line>
+        <line x1="8" y1="22" x2="16" y2="22"></line>
       </svg>
+      <svg class="ev-ai-close-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+      <div class="ev-ai-mini-bars">
+        <div class="ev-ai-mini-bar"></div><div class="ev-ai-mini-bar"></div>
+        <div class="ev-ai-mini-bar"></div><div class="ev-ai-mini-bar"></div>
+        <div class="ev-ai-mini-bar"></div>
+      </div>
     </button>
   </div>
 
   <!-- ========================================== -->
-  <!-- MAIN GLASS PANEL                           -->
+  <!-- SIDE PANEL FOR DOM ACTIONS                 -->
   <!-- ========================================== -->
-  <div id="ev-ai-panel" class="ev-ai-panel">
-    
-    <div class="ev-ai-panel-inner">
-      <!-- 1. Header Row -->
-      <div class="ev-ai-header-bar">
-        <div class="ev-ai-brand">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polygon points="12 5.5 16.5 9 15 15 9 15 7.5 9"></polygon>
-            <line x1="12" y1="5.5" x2="12" y2="2"></line>
-            <line x1="16.5" y1="9" x2="21" y2="7"></line>
-            <line x1="15" y1="15" x2="18.5" y2="19"></line>
-            <line x1="9" y1="15" x2="5.5" y2="19"></line>
-            <line x1="7.5" y1="9" x2="3" y2="7"></line>
-            <text x="12" y="13" font-family="system-ui, sans-serif" font-weight="bold" font-size="9" fill="currentColor" stroke="none" text-anchor="middle">E</text>
-          </svg>
-          EvangelistaSports
-        </div>
-        <div class="ev-ai-actions">
-          <svg viewBox="0 0 24 24" aria-label="Cart"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-          <svg viewBox="0 0 24 24" aria-label="Profile"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-          <button aria-label="Close" class="ev-ai-close-btn">&times;</button>
-        </div>
-      </div>
-
-      <!-- 2. Title & Status -->
-      <div class="ev-ai-title-row">
-        <h2>AI Assistant</h2>
-        <div class="ev-ai-status-badge">
-          ACTIVE <span class="ev-ai-status-dot"></span>
-        </div>
-      </div>
-
-      <!-- 3. The Orb (Listening Visualizer) -->
-      <div class="ev-ai-orb-wrapper">
-        <div class="ev-ai-orb">
-          <div class="ev-ai-orb-inner">
-            <span class="ev-ai-orb-text">LISTENING...</span>
-            <div class="ev-ai-mini-bars">
-              <div class="ev-ai-mini-bar"></div>
-              <div class="ev-ai-mini-bar"></div>
-              <div class="ev-ai-mini-bar"></div>
-              <div class="ev-ai-mini-bar"></div>
-              <div class="ev-ai-mini-bar"></div>
-            </div>
-            <svg class="ev-ai-orb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polygon points="12 7 16 10 14.5 15 9.5 15 8 10"></polygon>
-              <line x1="12" y1="7" x2="12" y2="2"></line>
-              <line x1="16" y1="10" x2="21.5" y2="8.5"></line>
-              <line x1="14.5" y1="15" x2="18.5" y2="19.5"></line>
-              <line x1="9.5" y1="15" x2="5.5" y2="19.5"></line>
-              <line x1="8" y1="10" x2="2.5" y2="8.5"></line>
-            </svg>
-          </div>
-        </div>
-        <p class="ev-ai-help-text">How can I help you today?</p>
-      </div>
-
-      <!-- 4. Product Recommendations Grid -->
-      <div class="ev-ai-recs">
-        <h3>Product Recommendations</h3>
-        <div class="ev-ai-grid" id="ev-ai-stage">
-          <!-- Populated dynamically by JS State Manager -->
-        </div>
-      </div>
-    </div> <!-- /ev-ai-panel-inner -->
-
-    <!-- 5. Bottom Wave & Recording Status -->
-    <div class="ev-ai-bottom-glass">
-      <div class="ev-ai-big-wave" id="ev-ai-wave"></div>
-      <div class="ev-ai-recording-status">
-        <div class="ev-ai-rec-text" id="ev-ai-rec-label">READY</div>
-        <div style="display:flex; align-items:center; gap:8px;">
-           <span id="ev-ai-timer">00:00</span>
-           <svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line><line x1="8" y1="22" x2="16" y2="22"></line></svg>
-        </div>
-      </div>
+  <div id="ev-ai-side-panel" class="ev-ai-side-panel">
+    <div class="ev-ai-panel-header">
+      <h2 id="ev-ai-panel-title">Results</h2>
+      <button class="ev-ai-close-panel-btn" id="ev-ai-close-panel-btn">&times;</button>
     </div>
-
-  </div> <!-- /ev-ai-panel -->
+    <div class="ev-ai-panel-content" id="ev-ai-stage">
+      <!-- Populated dynamically by JS State Manager -->
+    </div>
+  </div>
 
   <!-- ========================================== -->
   <!-- VAPI WEB SDK (UMD Build for Custom UI)     -->
   <!-- ========================================== -->
   <script>
-    // Load the Vapi Web SDK UMD build — exposes global `Vapi` constructor.
-    // This is NOT the html-script-tag (which creates its own button UI).
-    // UMD build gives us: new Vapi(key) → vapi.start(assistantId) → vapi.on(event, cb)
     (function(d, t) {
       var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
       g.src = 'https://cdn.jsdelivr.net/gh/balacodeio/Vapi-Web-UMD@latest/dist/latest/vapi-web-bundle.min.js';
@@ -434,15 +276,9 @@
       s.parentNode.insertBefore(g, s);
 
       g.onload = function() {
-        console.log('[EvangelistaAI] Vapi UMD SDK loaded. Vapi constructor available:', typeof Vapi);
         if (typeof Vapi === 'function') {
           window.evAiInit();
-        } else {
-          console.error('[EvangelistaAI] FATAL: Vapi constructor not found after UMD load.');
         }
-      };
-      g.onerror = function() {
-        console.error('[EvangelistaAI] FATAL: Failed to load Vapi UMD SDK from CDN.');
       };
     })(document, 'script');
   </script>
@@ -451,124 +287,75 @@
   <!-- JAVASCRIPT STATE MACHINE & LOGIC           -->
   <!-- ========================================== -->
   <script>
-    // ==========================================
-    // VAPI CONFIGURATION (REQUIRED)
-    // ==========================================
-    // Paste your Vapi Public Key and Assistant ID below.
     var EV_VAPI_PUBLIC_KEY = '07474656---------';
     var EV_VAPI_ASSISTANT_ID = '64e9aec9----------';
 
     window.evAiInit = function() {
       // --------------------------------------
-      // 0. GENERATE WAVE BARS (replaces document.write)
-      // --------------------------------------
-      var waveContainer = document.getElementById('ev-ai-wave');
-      if (waveContainer) {
-        for (var i = 0; i < 30; i++) {
-          var bar = document.createElement('div');
-          bar.className = 'ev-ai-big-wave-bar';
-          bar.style.animationDelay = (Math.random() * 1.5).toFixed(2) + 's';
-          waveContainer.appendChild(bar);
-        }
-      }
-
-      // --------------------------------------
       // 1. REACTIVE STATE MANAGER
       // --------------------------------------
       var state = {
-        isOpen: false,
+        isCallActive: false,
+        isPanelOpen: false,
         vapiStatus: 'disconnected', // disconnected | connecting | listening | speaking
         view: 'search_results',
         products: [],
-        callStartTime: null,
-        timerInterval: null
+        cartItems: [],
+        transcript: ''
       };
 
       // --------------------------------------
       // 2. DOM ELEMENT BINDINGS
       // --------------------------------------
       var els = {
-        launcherWrap: document.getElementById('ev-ai-launcher-wrapper'),
-        launcherBtn:  document.querySelector('.ev-ai-launcher-btn'),
-        panel:        document.getElementById('ev-ai-panel'),
-        stage:        document.getElementById('ev-ai-stage'),
-        orbText:      document.querySelector('.ev-ai-orb-text'),
-        statusBadge:  document.querySelector('.ev-ai-status-badge'),
-        closeBtn:     document.querySelector('.ev-ai-close-btn'),
-        recLabel:     document.getElementById('ev-ai-rec-label'),
-        timer:        document.getElementById('ev-ai-timer')
+        launcherBtn:  document.getElementById('ev-ai-launcher-btn'),
+        transcriptBubble: document.getElementById('ev-ai-transcript-bubble'),
+        transcriptText: document.getElementById('ev-ai-transcript-text'),
+        statusIndicator: document.getElementById('ev-ai-status-indicator'),
+        sidePanel:    document.getElementById('ev-ai-side-panel'),
+        panelTitle:   document.getElementById('ev-ai-panel-title'),
+        closePanelBtn:document.getElementById('ev-ai-close-panel-btn'),
+        stage:        document.getElementById('ev-ai-stage')
       };
 
-      if (!els.panel || !els.launcherBtn) {
-        console.error('[EvangelistaAI] Widget DOM elements not found. Aborting.');
-        return;
-      }
+      if (!els.launcherBtn || !els.sidePanel) return;
 
       // --------------------------------------
-      // 3. CALL TIMER
-      // --------------------------------------
-      function startTimer() {
-        state.callStartTime = Date.now();
-        state.timerInterval = setInterval(function() {
-          if (!state.callStartTime) return;
-          var elapsed = Math.floor((Date.now() - state.callStartTime) / 1000);
-          var mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
-          var secs = String(elapsed % 60).padStart(2, '0');
-          if (els.timer) els.timer.textContent = mins + ':' + secs;
-        }, 1000);
-      }
-
-      function stopTimer() {
-        if (state.timerInterval) clearInterval(state.timerInterval);
-        state.timerInterval = null;
-        state.callStartTime = null;
-        if (els.timer) els.timer.textContent = '00:00';
-      }
-
-      // --------------------------------------
-      // 4. UI RENDER ENGINE
+      // 3. UI RENDER ENGINE
       // --------------------------------------
       function render() {
-        // --- Drawer Visibility (using CSS class) ---
-        if (state.isOpen) {
-          els.panel.classList.add('ev-open');
-          els.launcherWrap.style.opacity = '0';
-          els.launcherWrap.style.pointerEvents = 'none';
-          els.launcherWrap.style.transform = 'scale(0.8)';
+        // --- Orb State ---
+        if (state.isCallActive) {
+          els.launcherBtn.classList.add('ev-active');
+          els.transcriptBubble.classList.add('ev-visible');
         } else {
-          els.panel.classList.remove('ev-open');
-          els.launcherWrap.style.opacity = '1';
-          els.launcherWrap.style.pointerEvents = 'all';
-          els.launcherWrap.style.transform = 'scale(1)';
+          els.launcherBtn.classList.remove('ev-active');
+          els.transcriptBubble.classList.remove('ev-visible');
         }
+
+        els.launcherBtn.classList.remove('ev-listening', 'ev-speaking');
+        if (state.vapiStatus === 'listening') els.launcherBtn.classList.add('ev-listening');
+        if (state.vapiStatus === 'speaking') els.launcherBtn.classList.add('ev-speaking');
 
         // --- Status Indicators ---
         var statusMap = {
-          disconnected: { orb: 'TAP TO TALK', badge: 'OFFLINE', badgeColor: '#8b96a5', badgeBg: 'rgba(255,255,255,0.05)', dotStyle: 'background:#8b96a5;box-shadow:none;' },
-          connecting:   { orb: 'CONNECTING...', badge: 'CONNECTING', badgeColor: '#f0a500', badgeBg: 'rgba(240,165,0,0.1)', dotStyle: 'background:#f0a500;box-shadow:0 0 8px #f0a500;' },
-          listening:    { orb: 'LISTENING...', badge: 'ACTIVE', badgeColor: 'var(--ev-accent)', badgeBg: 'rgba(31,223,100,0.1)', dotStyle: '' },
-          speaking:     { orb: 'SPEAKING...', badge: 'ACTIVE', badgeColor: 'var(--ev-accent)', badgeBg: 'rgba(31,223,100,0.1)', dotStyle: '' }
+          disconnected: { text: 'READY', color: '#8b96a5' },
+          connecting:   { text: 'CONNECTING...', color: '#f0a500' },
+          listening:    { text: 'LISTENING...', color: '#00f2fe' },
+          speaking:     { text: 'SPEAKING...', color: 'var(--ev-accent)' }
         };
         var s = statusMap[state.vapiStatus] || statusMap.disconnected;
-        els.orbText.textContent = s.orb;
-        els.statusBadge.innerHTML = s.badge + ' <span class="ev-ai-status-dot" style="' + (s.dotStyle || '') + '"></span>';
-        els.statusBadge.style.color = s.badgeColor;
-        els.statusBadge.style.background = s.badgeBg;
+        els.statusIndicator.innerHTML = s.text + ' <span class="ev-ai-status-dot" style="background:' + s.color + ';box-shadow:0 0 8px ' + s.color + '"></span>';
 
-        // --- Recording Label & Transcript ---
-        if (els.recLabel) {
-          if (state.vapiStatus === 'listening') els.recLabel.textContent = 'LISTENING...';
-          else if (state.vapiStatus === 'speaking') els.recLabel.textContent = 'JOHN IS SPEAKING...';
-          else if (state.vapiStatus === 'connecting') els.recLabel.textContent = 'CONNECTING...';
-          else els.recLabel.textContent = 'READY';
+        if (state.transcript) els.transcriptText.textContent = state.transcript;
+
+        // --- Side Panel Visibility ---
+        if (state.isPanelOpen) {
+          els.sidePanel.classList.add('ev-open');
+        } else {
+          els.sidePanel.classList.remove('ev-open');
         }
 
-        var transcriptEl = document.getElementById('ev-ai-transcript-text');
-        if (transcriptEl) {
-          transcriptEl.textContent = state.transcript || 'How can I help you today?';
-        }
-
-        // --- Dynamic Product Stage ---
         renderStage();
 
         // --- Delegate click events ---
@@ -587,36 +374,29 @@
         };
       }
 
-      // --------------------------------------
-      // 5. STAGE RENDERER (separated for clarity)
-      // --------------------------------------
       function renderStage() {
-        // === Search Results View ===
+        if (!state.isPanelOpen) return;
+
         if (state.view === 'search_results' && state.products.length > 0) {
+          els.panelTitle.textContent = 'Products Found';
           var html = '';
           state.products.forEach(function(p, idx) {
-            var imgSrc = (p.images && p.images[0]) || p.image || 'https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-1_large.png';
+            var imgSrc = (p.images && p.images[0]) || p.image || '';
             var priceText = (typeof p.price === 'number') ? ('$' + p.price.toFixed(2)) : (p.price || '$0.00');
-            var stockLabel = p.in_stock === false ? '<span style="color:#ff4d4d;font-size:9px;">OUT OF STOCK</span>' : '';
             var productId = p.product_id || p.id || '';
-            html += '<div class="ev-ai-product-card" id="ev-card-' + idx + '">' +
-              '<div class="ev-ai-img-box">' +
-                '<img src="' + imgSrc + '" alt="' + (p.title || '') + '">' +
-              '</div>' +
+            html += '<div class="ev-ai-product-card">' +
+              (imgSrc ? '<div class="ev-ai-img-box"><img src="' + imgSrc + '"></div>' : '') +
               '<div class="ev-ai-card-info">' +
                 '<span class="ev-ai-card-title">' + (p.title || 'Product') + '</span>' +
-                '<span class="ev-ai-card-price">' + priceText + ' ' + (p.currency || '') + ' ' + stockLabel + '</span>' +
-                '<div class="ev-ai-actions-row">' +
-                  '<button class="ev-ai-btn-add" data-ev-action="open-product" data-id="' + productId + '">VIEW</button>' +
-                '</div>' +
+                '<span class="ev-ai-card-price">' + priceText + '</span>' +
+                '<button class="ev-ai-btn-secondary" style="margin-top:6px;width:fit-content;" data-ev-action="open-product" data-id="' + productId + '">View Details</button>' +
               '</div>' +
             '</div>';
           });
-          els.stage.style.display = 'grid';
           els.stage.innerHTML = html;
         }
-        // === Product Detail View ===
         else if (state.view === 'product_detail' && state.products.length > 0) {
+          els.panelTitle.textContent = 'Product Details';
           var p = state.products[0];
           var imgSrc = (p.images && p.images[0]) || p.image || '';
           var priceText = (typeof p.price === 'number') ? ('$' + p.price.toFixed(2)) : (p.price || '');
@@ -625,98 +405,84 @@
 
           var variantHtml = '';
           if (variants.length > 0) {
-            variantHtml = '<div style="margin:12px 0;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">';
+            variantHtml = '<div style="margin:12px 0;display:flex;flex-wrap:wrap;gap:8px;">';
             variants.forEach(function(v) {
               var vId = v.variant_id || v.id || '';
+              // Extract purely numeric ID if it's a GID
+              if (typeof vId === 'string') {
+                var m = vId.match(/(\d+)$/);
+                if (m) vId = m[1];
+              }
               var vTitle = v.title || 'Default';
               var vAvail = v.available !== false;
-              variantHtml += '<button class="ev-ai-btn-add" data-ev-action="add-to-cart" data-variant="' + vId + '" data-qty="1" ' +
-                'style="font-size:10px;padding:6px 10px;' + (vAvail ? '' : 'opacity:0.4;cursor:not-allowed;') + '"' +
-                (vAvail ? '' : ' disabled') + '>' + vTitle + '</button>';
+              variantHtml += '<button class="ev-ai-btn-primary" data-ev-action="add-to-cart" data-variant="' + vId + '" data-qty="1" ' +
+                'style="flex:1;min-width:60px;font-size:11px;' + (vAvail ? '' : 'opacity:0.4;cursor:not-allowed;') + '"' +
+                (vAvail ? '' : ' disabled') + '>Add ' + vTitle + '</button>';
             });
             variantHtml += '</div>';
           } else {
-            // No variants — use product ID as variant ID for simple products
-            variantHtml = '<button class="ev-ai-btn-add" data-ev-action="add-to-cart" data-variant="' + productId + '" data-qty="1" style="font-size:14px;padding:12px;width:100%;margin-top:12px;">ADD TO CART</button>';
+            // No variants — use product ID or default ID as numeric variant
+            var vId = productId;
+            if (typeof vId === 'string') {
+                var m = vId.match(/(\d+)$/);
+                if (m) vId = m[1];
+            }
+            variantHtml = '<button class="ev-ai-btn-primary" data-ev-action="add-to-cart" data-variant="' + vId + '" data-qty="1" style="margin-top:12px;">ADD TO CART</button>';
           }
 
-          els.stage.style.display = 'flex';
-          els.stage.innerHTML = '<div style="background:var(--ev-card-bg);border-radius:16px;padding:20px;text-align:center;border:1px solid var(--ev-card-border);width:100%;">' +
-            (imgSrc ? '<img src="' + imgSrc + '" style="width:100%;max-height:200px;object-fit:contain;filter:drop-shadow(0 10px 10px rgba(0,0,0,0.5));margin-bottom:12px;">' : '') +
-            '<h4 style="color:#fff;font-size:15px;margin-bottom:6px;">' + (p.title || 'Product') + '</h4>' +
-            '<p style="color:var(--ev-text-muted);font-size:13px;margin-bottom:4px;">' + priceText + ' ' + (p.currency || '') + '</p>' +
-            (p.short_description ? '<p style="color:var(--ev-text-muted);font-size:11px;margin-bottom:8px;">' + p.short_description + '</p>' : '') +
+          els.stage.innerHTML = '<div>' +
+            (imgSrc ? '<img src="' + imgSrc + '" style="width:100%;max-height:250px;object-fit:contain;border-radius:12px;margin-bottom:16px;background:rgba(255,255,255,0.02);">' : '') +
+            '<h3 style="color:#fff;font-size:18px;margin-bottom:8px;">' + (p.title || 'Product') + '</h3>' +
+            '<p style="color:var(--ev-accent);font-size:16px;font-weight:600;margin-bottom:12px;">' + priceText + '</p>' +
+            (p.short_description ? '<p style="color:var(--ev-text-muted);font-size:13px;line-height:1.5;margin-bottom:16px;">' + p.short_description + '</p>' : '') +
             variantHtml +
-            '<button data-ev-action="back-to-results" style="background:none;border:1px solid var(--ev-panel-border);color:var(--ev-text-muted);padding:8px 16px;border-radius:20px;font-size:10px;cursor:pointer;margin-top:8px;font-family:var(--ev-font);">← BACK TO RESULTS</button>' +
           '</div>';
-          // Handle "back" separately
-          els.stage.querySelector('[data-ev-action="back-to-results"]').onclick = function() {
-            if (state.lastSearchProducts && state.lastSearchProducts.length > 0) {
-              state.products = state.lastSearchProducts;
-              state.view = 'search_results';
-            } else {
-              state.products = [];
-              state.view = 'search_results';
-            }
-            render();
-          };
         }
-        // === Cart View ===
         else if (state.view === 'cart') {
+          els.panelTitle.textContent = 'Your Cart';
           if (state.cartItems && state.cartItems.length > 0) {
-            var cartHtml = '<div style="width:100%;"><h3 style="color:#fff;font-size:14px;margin-bottom:12px;">Your Cart</h3>';
+            var cartHtml = '<div>';
             var cartTotal = 0;
             state.cartItems.forEach(function(item) {
               var linePrice = (item.line_price || item.price || 0) / 100;
               cartTotal += linePrice;
-              cartHtml += '<div style="display:flex;gap:10px;align-items:center;padding:10px;background:var(--ev-card-bg);border:1px solid var(--ev-card-border);border-radius:12px;margin-bottom:8px;">' +
-                (item.image ? '<img src="' + item.image + '" style="width:50px;height:50px;object-fit:cover;border-radius:8px;">' : '') +
-                '<div style="flex:1;">' +
-                  '<p style="color:#fff;font-size:12px;margin:0;">' + (item.title || 'Item') + '</p>' +
-                  '<p style="color:var(--ev-text-muted);font-size:10px;margin:2px 0 0 0;">' + (item.variant_title || '') + ' × ' + item.quantity + '</p>' +
-                  '<p style="color:var(--ev-accent);font-size:11px;margin:2px 0 0 0;">$' + linePrice.toFixed(2) + '</p>' +
+              cartHtml += '<div class="ev-ai-product-card" style="margin-bottom:12px;align-items:center;">' +
+                (item.image ? '<div class="ev-ai-img-box" style="width:60px;height:60px;"><img src="' + item.image + '"></div>' : '') +
+                '<div class="ev-ai-card-info">' +
+                  '<span class="ev-ai-card-title">' + (item.title || 'Item') + '</span>' +
+                  '<span class="ev-ai-card-price">' + (item.variant_title || '') + ' × ' + item.quantity + '</span>' +
+                  '<span style="color:var(--ev-accent);font-size:12px;font-weight:600;">$' + linePrice.toFixed(2) + '</span>' +
                 '</div>' +
-                '<div style="display:flex;gap:4px;">' +
-                  '<button class="ev-ai-btn-star" data-ev-action="update-qty" data-id="' + item.key + '" data-qty="' + Math.max(0, item.quantity - 1) + '" title="Decrease">−</button>' +
-                  '<button class="ev-ai-btn-star" data-ev-action="update-qty" data-id="' + item.key + '" data-qty="' + (item.quantity + 1) + '" title="Increase">+</button>' +
-                  '<button class="ev-ai-btn-star" data-ev-action="remove-from-cart" data-id="' + item.key + '" title="Remove" style="color:#ff4d4d;">✕</button>' +
+                '<div style="display:flex;flex-direction:column;gap:4px;">' +
+                  '<button class="ev-ai-btn-secondary" style="padding:4px 8px;" data-ev-action="update-qty" data-id="' + item.key + '" data-qty="' + (item.quantity + 1) + '">+</button>' +
+                  '<button class="ev-ai-btn-secondary" style="padding:4px 8px;" data-ev-action="update-qty" data-id="' + item.key + '" data-qty="' + Math.max(0, item.quantity - 1) + '">-</button>' +
                 '</div>' +
               '</div>';
             });
-            cartHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid var(--ev-panel-border);margin-top:8px;">' +
-              '<span style="color:#fff;font-size:13px;font-weight:600;">Total</span>' +
-              '<span style="color:var(--ev-accent);font-size:15px;font-weight:700;">$' + cartTotal.toFixed(2) + '</span>' +
+            cartHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-top:1px solid var(--ev-panel-border);margin-top:16px;">' +
+              '<span style="color:#fff;font-size:16px;font-weight:600;">Total</span>' +
+              '<span style="color:var(--ev-accent);font-size:18px;font-weight:700;">$' + cartTotal.toFixed(2) + '</span>' +
             '</div>' +
-            '<a href="/checkout" style="display:block;text-align:center;padding:12px;background:var(--ev-accent);color:#000;font-weight:700;font-size:12px;border-radius:20px;text-decoration:none;letter-spacing:0.5px;font-family:var(--ev-font);">PROCEED TO CHECKOUT</a>' +
+            '<a href="/checkout" class="ev-ai-btn-primary" style="display:block;text-decoration:none;">PROCEED TO CHECKOUT</a>' +
             '</div>';
-            els.stage.style.display = 'flex';
             els.stage.innerHTML = cartHtml;
           } else {
-            els.stage.innerHTML = '<p style="color:var(--ev-text-muted);text-align:center;padding:20px 0;font-size:12px;">Your cart is empty.</p>';
+            els.stage.innerHTML = '<p style="color:var(--ev-text-muted);text-align:center;padding:40px 0;">Your cart is empty.</p>';
           }
-        }
-        // === Empty State ===
-        else {
-          els.stage.innerHTML = '<p style="color:var(--ev-text-muted);text-align:center;padding:20px 0;font-size:12px;">Ask the AI to find some gear!</p>';
         }
       }
 
-      // --------------------------------------
-      // 6. TOAST NOTIFICATION SYSTEM
-      // --------------------------------------
       function showToast(message, type) {
         type = type || 'success';
         var toast = document.createElement('div');
         var bgColor = type === 'success' ? 'rgba(31,223,100,0.95)' : type === 'error' ? 'rgba(255,77,77,0.95)' : 'rgba(240,165,0,0.95)';
-        toast.style.cssText = 'position:fixed;top:20px;right:20px;z-index:2147483647;padding:12px 20px;border-radius:8px;color:#000;font-family:var(--ev-font);font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.4);transform:translateY(-20px);opacity:0;transition:all 0.3s;background:' + bgColor + ';max-width:300px;';
+        toast.style.cssText = 'position:fixed;top:20px;right:20px;z-index:2147483647;padding:12px 20px;border-radius:8px;color:#000;font-family:var(--ev-font);font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.4);transform:translateY(-20px);opacity:0;transition:all 0.3s;background:' + bgColor + ';';
         toast.textContent = message;
         document.body.appendChild(toast);
-        // Animate in
         requestAnimationFrame(function() {
           toast.style.transform = 'translateY(0)';
           toast.style.opacity = '1';
         });
-        // Animate out after 3s
         setTimeout(function() {
           toast.style.transform = 'translateY(-20px)';
           toast.style.opacity = '0';
@@ -725,49 +491,49 @@
       }
 
       // --------------------------------------
-      // 7. SHOPIFY CART API INTEGRATION
+      // 4. SHOPIFY CART API INTEGRATION
       // --------------------------------------
       function addToShopifyCart(variantId, quantity) {
         if (!variantId) { showToast('No variant selected.', 'error'); return; }
         
-        // Shopify cart endpoints require strictly numeric Variant IDs.
-        // If it's a GID string (e.g. "gid://shopify/ProductVariant/123456"), extract the numbers.
+        // Ensure numeric variant ID
         if (typeof variantId === 'string') {
           var match = variantId.match(/(\d+)$/);
-          if (match) {
-             variantId = match[1];
-          }
+          if (match) variantId = match[1];
         }
 
         quantity = quantity || 1;
-        console.log('[EvangelistaAI] Adding to Shopify cart: variant=' + variantId + ' qty=' + quantity);
-        showToast('Adding to cart...', 'info');
 
+        // Use standard add.js behavior format
         fetch('/cart/add.js', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: variantId, quantity: quantity })
+          body: JSON.stringify({ id: parseInt(variantId, 10), quantity: quantity })
         })
         .then(function(res) {
           if (!res.ok) throw new Error('Shopify returned ' + res.status);
           return res.json();
         })
         .then(function(data) {
-          console.log('[EvangelistaAI] Cart add success:', data);
           showToast('Added to cart! ✓', 'success');
-          // Update Shopify theme cart count if possible
           updateThemeCartCount();
+          // Optionally, auto-open cart to show user what happened
+          fetchAndShowCart();
         })
         .catch(function(err) {
           console.error('[EvangelistaAI] Cart add error:', err);
-          showToast('Failed to add to cart. Please try again.', 'error');
+          showToast('Failed to add to cart.', 'error');
         });
       }
 
       function updateShopifyCart(lineKey, quantity) {
         if (!lineKey) return;
-        console.log('[EvangelistaAI] Updating cart: key=' + lineKey + ' qty=' + quantity);
         var updates = {};
+        // If the key is a GID, extract numeric ID.
+        if (typeof lineKey === 'string' && lineKey.indexOf('gid://') !== -1) {
+             var m = lineKey.match(/(\d+)$/);
+             if (m) lineKey = m[1];
+        }
         updates[lineKey] = quantity;
 
         fetch('/cart/update.js', {
@@ -779,12 +545,10 @@
           if (!res.ok) throw new Error('Shopify returned ' + res.status);
           return res.json();
         })
-        .then(function(data) {
-          console.log('[EvangelistaAI] Cart update success:', data);
+        .then(function() {
           if (quantity === 0) showToast('Removed from cart.', 'success');
           else showToast('Cart updated! ✓', 'success');
-          // Refresh cart view if currently showing
-          if (state.view === 'cart') fetchAndShowCart();
+          if (state.view === 'cart' && state.isPanelOpen) fetchAndShowCart();
           updateThemeCartCount();
         })
         .catch(function(err) {
@@ -797,10 +561,10 @@
         fetch('/cart.js')
         .then(function(res) { return res.json(); })
         .then(function(cart) {
-          console.log('[EvangelistaAI] Cart fetched:', cart);
           state.cartItems = (cart.items || []).map(function(item) {
             return {
-              key: item.key,
+              key: item.key, // Can be variant_id or a unique key string (which is correct for /cart/update.js)
+              variant_id: item.variant_id,
               title: item.title,
               variant_title: item.variant_title || '',
               quantity: item.quantity,
@@ -810,38 +574,34 @@
             };
           });
           state.view = 'cart';
+          state.isPanelOpen = true;
           render();
         })
         .catch(function(err) {
-          console.error('[EvangelistaAI] Failed to fetch cart:', err);
           showToast('Could not load cart.', 'error');
         });
       }
 
       function updateThemeCartCount() {
-        // Try to update the theme's cart count badge(s)
         try {
           fetch('/cart.js')
           .then(function(res) { return res.json(); })
           .then(function(cart) {
             var countEls = document.querySelectorAll('[data-cart-count], .cart-count-bubble span, .cart-count, .js-cart-count');
             countEls.forEach(function(el) { el.textContent = cart.item_count; });
+
+            // Many modern themes (like Dawn) have a cart drawer that can be triggered.
+            // Dispatch standard cart update event
+            document.documentElement.dispatchEvent(new CustomEvent('cart:updated', { bubbles: true }));
           });
-        } catch(e) { /* Theme might not have these elements */ }
+        } catch(e) {}
       }
 
-      // --------------------------------------
-      // 8. PRODUCT DETAIL FETCHING
-      // --------------------------------------
-      // Cache last search results for back-navigation and open_product lookups
       function openProductById(productId) {
         if (!productId) return;
-        console.log('[EvangelistaAI] Opening product:', productId);
-
-        // Optional numeric ID parsing for lookup flexibility
         var numericProductId = typeof productId === 'string' && productId.indexOf('gid://') !== -1 ? productId.split('/').pop() : productId;
 
-        // First, check if we have this product in our current results
+        // Try cache first
         var found = null;
         state.products.forEach(function(p) {
           var pId = p.product_id || p.id || '';
@@ -849,202 +609,112 @@
           if (pId === productId || pNumId === numericProductId) found = p;
         });
 
-        // Save current results for back-navigation
-        if (state.view === 'search_results' && state.products.length > 0) {
-          state.lastSearchProducts = state.products.slice();
-        }
-
         if (found) {
           state.products = [found];
           state.view = 'product_detail';
+          state.isPanelOpen = true;
           render();
         } else {
-          // Fetch from our backend API
           state.view = 'product_detail';
           state.products = [{ product_id: productId, title: 'Loading...', price: '' }];
+          state.isPanelOpen = true;
           render();
-          // Try backend product endpoint
           fetch('/api/product/' + encodeURIComponent(productId))
           .then(function(res) { return res.json(); })
           .then(function(data) {
-            if (data && data.item) {
-              state.products = [data.item];
-            } else if (data) {
-              state.products = [data];
-            }
+            if (data && data.item) state.products = [data.item];
+            else if (data) state.products = [data];
             render();
-          })
-          .catch(function(err) {
-            console.warn('[EvangelistaAI] Product fetch failed, using cached data:', err);
           });
         }
       }
 
       // --------------------------------------
-      // 9. NAVIGATION HANDLER
-      // --------------------------------------
-      function navigateTo(payload) {
-        if (!payload) return;
-        var pageMap = {
-          'home': '/',
-          'cart': '/cart',
-          'search': '/search',
-          'collection': '/collections',
-          'collections': '/collections'
-        };
-
-        var url = payload.url || pageMap[payload.page] || null;
-        if (!url) {
-          console.warn('[EvangelistaAI] Unknown navigation target:', payload);
-          return;
-        }
-
-        // If it's cart page, use our widget's cart view instead of navigating
-        if (payload.page === 'cart') {
-          fetchAndShowCart();
-          return;
-        }
-
-        console.log('[EvangelistaAI] Navigating to:', url);
-        // Use standard navigation — safe across all Shopify themes
-        window.location.href = url;
-      }
-
-      // --------------------------------------
-      // 10. ACTION ROUTER (Production)
+      // 5. ACTION ROUTER
       // --------------------------------------
       window.handleAction = function(action) {
-        if (!action || !action.type) {
-          console.warn('[EvangelistaAI] Invalid action received:', action);
-          return;
-        }
-        console.log('[EvangelistaAI] Action received:', action);
+        if (!action || !action.type) return;
         var payload = action.payload || {};
 
         switch (action.type) {
           case 'search_products':
             state.view = 'search_results';
             state.products = payload.candidates || [];
-            // Cache for open_product back-navigation
-            state.lastSearchProducts = state.products.slice();
+            if (state.products.length === 1) {
+                // Directly open if only one match
+                openProductById(state.products[0].product_id || state.products[0].id);
+            } else {
+                state.isPanelOpen = true;
+                render();
+            }
             break;
-
           case 'open_product':
             var pid = payload.product_id || payload.id || '';
-            
-            // If the backend sent full product details (e.g. variants, images exists), render it directly!
             if (payload.title && (payload.variants || payload.images || payload.price)) {
-              console.log('[EvangelistaAI] Received full product payload, rendering directly.');
               state.products = [payload];
               state.view = 'product_detail';
+              state.isPanelOpen = true;
               render();
-              return;
+            } else if (pid) {
+              openProductById(pid);
             }
-            
-            // Otherwise, fallback to lookup in cache by ID
-            if (pid) openProductById(pid);
-            return;
-
+            break;
           case 'add_to_cart':
             var vid = payload.variant_id || '';
-            var qty = payload.quantity || 1;
-            if (vid) {
-              addToShopifyCart(vid, qty);
-            } else {
-              console.warn('[EvangelistaAI] add_to_cart missing variant_id');
-              showToast('Cannot add — variant not specified.', 'error');
-            }
+            if (vid) addToShopifyCart(vid, payload.quantity || 1);
             break;
-
           case 'update_cart':
-            var lineKey = payload.line_id || '';
-            var newQty = (payload.quantity !== undefined) ? payload.quantity : 1;
-            if (lineKey) {
-              updateShopifyCart(lineKey, newQty);
-            } else {
-              showToast('Cannot update — cart item not specified.', 'error');
-            }
+            var lineKey = payload.line_id || payload.variant_id || '';
+            if (lineKey) updateShopifyCart(lineKey, (payload.quantity !== undefined) ? payload.quantity : 1);
             break;
-
           case 'show_cart':
             fetchAndShowCart();
-            return; // fetchAndShowCart calls render() itself
-
-          case 'navigate':
-            navigateTo(payload);
             break;
-
-          default:
-            console.warn('[EvangelistaAI] Unknown action type:', action.type);
+          case 'navigate':
+            // Instead of reloading, maybe just fetchAndShowCart if page='cart'
+            if (payload.page === 'cart') fetchAndShowCart();
+            else if (payload.url || payload.page) {
+                var pageMap = { 'home': '/', 'collection': '/collections' };
+                window.location.href = payload.url || pageMap[payload.page] || '/';
+            }
+            break;
         }
-        render();
-      };
-
-      // Manual UI cart button (for product cards without variant selector)
-      window.evAiCart = function(variantId) {
-        if (variantId) addToShopifyCart(variantId, 1);
       };
 
       // --------------------------------------
-      // 11. VAPI SDK INITIALIZATION (UMD Build)
+      // 6. VAPI SDK
       // --------------------------------------
-      // The UMD build gives us a global `Vapi` constructor class.
-      // new Vapi(publicKey) creates a headless instance — NO UI is created.
-      // We control everything: .start(assistantId), .stop(), .on(event, cb)
       var vapiInstance = new Vapi(EV_VAPI_PUBLIC_KEY);
       window.vapiInstance = vapiInstance;
-      console.log('[EvangelistaAI] Vapi instance created (headless, no built-in UI).');
 
-      // --------------------------------------
-      // 12. VAPI EVENT BINDINGS
-      // --------------------------------------
       vapiInstance.on('call-start', function() {
-        console.log('[EvangelistaAI] Call started — microphone active.');
+        state.isCallActive = true;
         state.vapiStatus = 'listening';
-        state.isOpen = true;
-        state.transcript = '';
-        startTimer();
+        state.transcript = 'Hello! I am John, how can I help you?';
         render();
       });
 
       vapiInstance.on('call-end', function() {
-        console.log('[EvangelistaAI] Call ended.');
+        state.isCallActive = false;
         state.vapiStatus = 'disconnected';
-        stopTimer();
+        state.isPanelOpen = false;
         render();
       });
 
-      vapiInstance.on('speech-start', function() {
-        state.vapiStatus = 'speaking';
-        render();
-      });
-
-      vapiInstance.on('speech-end', function() {
-        state.vapiStatus = 'listening';
-        render();
-      });
+      vapiInstance.on('speech-start', function() { state.vapiStatus = 'speaking'; render(); });
+      vapiInstance.on('speech-end', function() { state.vapiStatus = 'listening'; render(); });
 
       vapiInstance.on('message', function(message) {
-        console.log('[EvangelistaAI] Vapi message:', message);
-
-        // Handle real-time transcripts updates
         if (message.type === 'transcript' && message.transcriptType === 'final') {
-          console.log('[EvangelistaAI] Transcript [' + message.role + ']: ' + message.transcript);
           state.transcript = message.transcript;
           render();
         }
 
-        // --- ROBUST ACTION EXTRACTION ---
-        // Vapi sends tool results in multiple formats and deeply nested arrays.
-        // A recursive deep search ensures we NEVER miss the backend's {"action": {"type": "..."}}
+        // Action Extraction
         var actionObj = null;
-
         function findActionDeep(obj, depth) {
           if (!obj || typeof obj !== 'object' || depth > 5) return null;
-          
-          // Found exact shape!
-          if (obj.action && obj.action.type && obj.action.payload) return obj.action;
-          
+          if (obj.action && obj.action.type) return obj.action;
           if (Array.isArray(obj)) {
             for (var i=0; i < obj.length; i++) {
               var f = findActionDeep(obj[i], depth + 1);
@@ -1052,7 +722,6 @@
             }
             return null;
           }
-
           var keys = ['message', 'toolCallResult', 'results', 'result', 'toolWithToolCallList', 'toolCall', 'function', 'arguments', 'parameters'];
           for (var j=0; j < keys.length; j++) {
             var val = obj[keys[j]];
@@ -1069,8 +738,7 @@
 
         actionObj = findActionDeep(message, 0);
 
-        // Pattern Fallback: If Vapi is calling a tool but no "action" envelope was attached, we can use the call itself.
-        // But only if we haven't already found the rich action response.
+        // Fallback for raw tool call
         if (!actionObj && message.type === 'function-call' && message.functionCall) {
             actionObj = {
                 type: message.functionCall.name,
@@ -1078,52 +746,41 @@
             };
         }
 
-        // Dispatch if we found an action
-        if (actionObj) {
-          console.log('[EvangelistaAI] Extracted action from Vapi message:', actionObj);
-          window.handleAction(actionObj);
+        // Additional fallback: If it's a tool call list in an array
+        if (!actionObj && message.type === 'tool-calls' && message.toolWithToolCallList) {
+             for (var idx = 0; idx < message.toolWithToolCallList.length; idx++) {
+                 var tc = message.toolWithToolCallList[idx].toolCall;
+                 if (tc && tc.function && tc.function.name) {
+                     actionObj = { type: tc.function.name, payload: tc.function.arguments || {} };
+                     break;
+                 }
+             }
+        }
+
+        if (actionObj) window.handleAction(actionObj);
+      });
+
+      // --------------------------------------
+      // 7. EVENTS
+      // --------------------------------------
+      els.launcherBtn.addEventListener('click', function() {
+        if (state.isCallActive) {
+          vapiInstance.stop();
+        } else {
+          state.vapiStatus = 'connecting';
+          state.isCallActive = true;
+          state.transcript = 'Connecting to John...';
+          render();
+          vapiInstance.start(EV_VAPI_ASSISTANT_ID);
         }
       });
 
-      vapiInstance.on('error', function(e) {
-        console.error('[EvangelistaAI] Vapi error:', e);
-        state.vapiStatus = 'disconnected';
-        showToast('Connection error. Please try again.', 'error');
+      els.closePanelBtn.addEventListener('click', function() {
+        state.isPanelOpen = false;
         render();
       });
 
-      // --------------------------------------
-      // 13. CUSTOM LAUNCHER BUTTON EVENTS
-      // --------------------------------------
-      els.launcherBtn.addEventListener('click', function() {
-        console.log('[EvangelistaAI] Launcher clicked. Starting Vapi call...');
-        state.vapiStatus = 'connecting';
-        state.isOpen = true;
-        render();
-        // Pass the assistant ID to start() — required by the UMD/Web SDK
-        vapiInstance.start(EV_VAPI_ASSISTANT_ID);
-      });
-
-      if (els.closeBtn) {
-        els.closeBtn.addEventListener('click', function() {
-          console.log('[EvangelistaAI] Close button clicked. Ending call...');
-          vapiInstance.stop();
-          state.isOpen = false;
-          state.vapiStatus = 'disconnected';
-          state.products = [];
-          state.cartItems = [];
-          state.lastSearchProducts = [];
-          state.transcript = '';
-          stopTimer();
-          render();
-        });
-      }
-
-      // Initial render (panel hidden, launcher visible)
       render();
-
-      console.log('[EvangelistaAI] Widget initialized and ready. Phase 3 + Phase 4 active.');
     };
   </script>
-
 </div>
