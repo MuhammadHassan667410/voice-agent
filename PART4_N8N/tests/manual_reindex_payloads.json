@@ -1,0 +1,11 @@
+{
+  "all": {
+    "scope": "all",
+    "reason": "owner_manual_reindex"
+  },
+  "ids": {
+    "scope": "ids",
+    "product_ids": ["1234567890", "9876543210"],
+    "reason": "owner_targeted_reindex"
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "name": "Part4 - Product Updated -> Conditional Re-embed",
+  "active": false,
+  "nodes": [
+    {
+      "id": "Webhook_ProductUpdated",
+      "name": "Webhook Product Updated",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 260],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "shopify/product-updated",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      }
+    },
+    {
+      "id": "Code_VerifyAndEnvelope",
+      "name": "Verify + Build Envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 260],
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\n// ══════════════════════════════════════════════════════\n// CONFIGURATION\n// Replace with your real Shopify webhook secret.\n// Found in: Shopify Admin → Settings → Notifications → Webhooks\n// DO NOT leave as placeholder in production.\n// ══════════════════════════════════════════════════════\nconst WEBHOOK_SECRET = '__SHOPIFY_WEBHOOK_SECRET__';\n\n// Set to true ONLY during local testing (skips HMAC check).\n// MUST be false in production.\nconst SKIP_VERIFICATION = true;\n\n// ── EXTRACT HEADERS ───────────────────────────────────\nconst first    = $input.first();\nconst itemJson = first.json  || {};\nconst binary   = first.binary || {};\nconst headers  = itemJson.headers || {};\n\n// ── EXTRACT RAW BODY BYTES ────────────────────────────\n// n8n delivers rawBody as binary when rawBody:true is set.\n// We must get the exact bytes Shopify signed.\nlet rawBodyBuffer = null;\n\n// Priority 1: binary data (most accurate)\nconst bd = binary.data;\nif (bd && bd.data && typeof bd.data === 'string') {\n  rawBodyBuffer = Buffer.from(bd.data, 'base64');\n  console.log('[Webhook] body source: binary, bytes:', rawBodyBuffer.length);\n}\n\n// Priority 2: rawBody string\nif (!rawBodyBuffer) {\n  const rb = itemJson.rawBody;\n  if (typeof rb === 'string' && rb.length > 0) {\n    rawBodyBuffer = Buffer.from(rb, 'utf8');\n    console.log('[Webhook] body source: rawBody string, bytes:', rawBodyBuffer.length);\n  }\n}\n\n// Priority 3: body string\nif (!rawBodyBuffer) {\n  const bs = itemJson.body;\n  if (typeof bs === 'string' && bs.length > 0) {\n    rawBodyBuffer = Buffer.from(bs, 'utf8');\n    console.log('[Webhook] body source: body string, bytes:', rawBodyBuffer.length);\n  }\n}\n\n// Priority 4: serialise body object (last resort, may not match signature)\nif (!rawBodyBuffer) {\n  const bo = itemJson.body;\n  if (bo && typeof bo === 'object') {\n    rawBodyBuffer = Buffer.from(JSON.stringify(bo), 'utf8');\n    console.log('[Webhook] body source: JSON.stringify(body), bytes:', rawBodyBuffer.length);\n  }\n}\n\nif (!rawBodyBuffer || rawBodyBuffer.length === 0) {\n  throw new Error('Cannot extract raw body. Ensure rawBody:true is set on the Webhook node.');\n}\n\n// ── VERIFY HMAC ───────────────────────────────────────\nconst provided = (\n  headers['x-shopify-hmac-sha256']  ||\n  headers['X-Shopify-Hmac-Sha256']  ||\n  itemJson['x-shopify-hmac-sha256'] ||\n  ''\n).trim();\n\nconsole.log('[Webhook] HMAC provided :', provided || '(none)');\nconsole.log('[Webhook] SKIP_VERIFICATION:', SKIP_VERIFICATION);\nconsole.log('[Webhook] Secret set:', !WEBHOOK_SECRET.startsWith('__'));\n\nif (!SKIP_VERIFICATION) {\n  if (WEBHOOK_SECRET.startsWith('__')) {\n    throw new Error('Set your real Shopify webhook secret: replace __SHOPIFY_WEBHOOK_SECRET__ in the code.');\n  }\n  if (!provided) {\n    throw new Error('Missing X-Shopify-Hmac-Sha256 header. Is this a real Shopify webhook request?');\n  }\n  const computed = crypto\n    .createHmac('sha256', WEBHOOK_SECRET)\n    .update(rawBodyBuffer)\n    .digest('base64');\n  console.log('[Webhook] HMAC computed  :', computed);\n  // Use length-safe comparison\n  const pBuf = Buffer.from(provided);\n  const cBuf = Buffer.from(computed);\n  const match = pBuf.length === cBuf.length &&\n                crypto.timingSafeEqual(pBuf, cBuf);\n  if (!match) {\n    throw new Error(\n      `Invalid Shopify HMAC signature.\\n` +\n      `  provided : ${provided}\\n` +\n      `  computed : ${computed}\\n` +\n      `  bodyBytes: ${rawBodyBuffer.length}\\n` +\n      `  Tip: Check your webhook secret is correct in Shopify Admin → Settings → Notifications → Webhooks`\n    );\n  }\n  console.log('[Webhook] HMAC verified ✅');\n} else {\n  console.log('[Webhook] ⚠️  SKIP_VERIFICATION=true — HMAC check bypassed (testing mode)');\n}\n\n// ── PARSE PAYLOAD ─────────────────────────────────────\nlet payload;\ntry {\n  payload = JSON.parse(rawBodyBuffer.toString('utf8'));\n} catch (e) {\n  throw new Error('Webhook body is not valid JSON: ' + e.message);\n}\n\n// ── BUILD ENVELOPE ────────────────────────────────────\nconst shopDomain =\n  headers['x-shopify-shop-domain'] ||\n  headers['X-Shopify-Shop-Domain'] ||\n  'unknown-shop.myshopify.com';\n\nconst eventId =\n  headers['x-shopify-webhook-id'] ||\n  headers['X-Shopify-Webhook-Id']  ||\n  `${payload.id || 'unknown'}-${payload.updated_at || payload.created_at || new Date().toISOString()}`;\n\nreturn [{ json: {\n  event_id: eventId,\n  webhook_topic: 'products/update',\n  envelope: {\n    shop_domain: shopDomain,\n    event_id: eventId,\n    occurred_at: payload.updated_at || payload.created_at || new Date().toISOString(),\n    payload\n  }\n}}];"
+      }
+    },
+    {
+      "id": "Code_TextDecision",
+      "name": "Text Change Decision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1160, 360],
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn [{ json: { ...input, text_changed: true, embedding_mode: 'reembed_always' } }];"
+      }
+    },
+    {
+      "id": "If_TextChanged",
+      "name": "Text Fields Changed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1380, 360],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.text_changed}}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "Http_BackendUpdateText",
+      "name": "Call Backend Updated (Text)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1620, 280],
+      "parameters": {
+        "method": "POST",
+        "url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/sync/shopify/product-created",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "X-Webhook-Topic", "value": "={{$json.webhook_topic}}" },
+            { "name": "X-Webhook-Event-Id", "value": "={{$json.event_id}}" },
+            { "name": "X-Embedding-Mode", "value": "reembed" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json.envelope}}"
+      }
+    },
+    {
+      "id": "Http_BackendUpdateStructured",
+      "name": "Call Backend Updated (Structured)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1620, 460],
+      "parameters": {
+        "method": "POST",
+        "url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/sync/shopify/product-created",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "X-Webhook-Topic", "value": "={{$json.webhook_topic}}" },
+            { "name": "X-Webhook-Event-Id", "value": "={{$json.event_id}}" },
+            { "name": "X-Embedding-Mode", "value": "structured_only" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json.envelope}}"
+      }
+    },
+    {
+      "id": "Respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1860, 360],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Product Updated": {
+      "main": [[{ "node": "Verify + Build Envelope", "type": "main", "index": 0 }]]
+    },
+    "Verify + Build Envelope": {
+      "main": [[{ "node": "Text Change Decision", "type": "main", "index": 0 }]]
+    },
+    "Text Change Decision": {
+      "main": [[{ "node": "Text Fields Changed?", "type": "main", "index": 0 }]]
+    },
+    "Text Fields Changed?": {
+      "main": [
+        [{ "node": "Call Backend Updated (Text)", "type": "main", "index": 0 }],
+        [{ "node": "Call Backend Updated (Structured)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Call Backend Updated (Text)": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    },
+    "Call Backend Updated (Structured)": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

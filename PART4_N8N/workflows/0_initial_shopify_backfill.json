@@ -1,0 +1,85 @@
+{
+  "name": "Part4 - Initial Shopify Backfill -> Supabase",
+  "active": false,
+  "nodes": [
+    {
+      "id": "ManualTrigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [200, 240],
+      "parameters": {}
+    },
+    {
+      "id": "Http_ListProducts",
+      "name": "Fetch Shopify Products (First 250)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 240],
+      "parameters": {
+        "method": "GET",
+        "url": "__SHOPIFY_ADMIN_API_BASE_URL__/products.json?limit=250&status=active",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Shopify-Access-Token", "value": "__SHOPIFY_ADMIN_ACCESS_TOKEN__" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "Code_ExplodeProducts",
+      "name": "Explode Products",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 240],
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst products = data.products || [];\nconst configuredDomain = '__SHOPIFY_STORE_DOMAIN__';\nconst adminBase = '__SHOPIFY_ADMIN_API_BASE_URL__';\nconst storeCurrency = '__SHOPIFY_STORE_CURRENCY__';\nconst inferredDomain = adminBase.replace(/^https?:\\/\\//i, '').split('/')[0].toLowerCase();\nconst resolvedDomain = configuredDomain.includes('__SHOPIFY_STORE_DOMAIN__') ? inferredDomain : configuredDomain.toLowerCase().replace(/^https?:\\/\\//i, '').replace(/\\/$/, '');\nif (!resolvedDomain) {\n  throw new Error('Could not resolve shop_domain. Set __SHOPIFY_STORE_DOMAIN__ or __SHOPIFY_ADMIN_API_BASE_URL__.');\n}\nreturn products.map((p) => ({\n  json: {\n    webhook_topic: 'products/create',\n    event_id: `backfill-${p.id}-${new Date().toISOString()}`,\n    envelope: {\n      shop_domain: resolvedDomain,\n      store_currency: storeCurrency.includes('__SHOPIFY_STORE_CURRENCY__') ? null : storeCurrency.toUpperCase(),\n      event_id: `backfill-${p.id}-${new Date().toISOString()}`,\n      occurred_at: p.updated_at || p.created_at || new Date().toISOString(),\n      payload: p\n    }\n  }\n}));"
+      }
+    },
+    {
+      "id": "Http_BackendCreate",
+      "name": "Call Backend Product Created",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1040, 240],
+      "parameters": {
+        "method": "POST",
+        "url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/sync/shopify/product-created",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "X-Webhook-Topic", "value": "={{$json.webhook_topic}}" },
+            { "name": "X-Webhook-Event-Id", "value": "={{$json.event_id}}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json.envelope}}"
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "Fetch Shopify Products (First 250)", "type": "main", "index": 0 }]]
+    },
+    "Fetch Shopify Products (First 250)": {
+      "main": [[{ "node": "Explode Products", "type": "main", "index": 0 }]]
+    },
+    "Explode Products": {
+      "main": [[{ "node": "Call Backend Product Created", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

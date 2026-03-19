@@ -1,0 +1,206 @@
+{
+  "vapi_registration": {
+    "purpose": "Map Vapi tool calls to backend intent endpoints.",
+    "backend_public_base_url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/",
+    "credential_policy": {
+      "vapi_needs": [
+        "Vapi API key (inside Vapi dashboard/API only)",
+        "Tool server URL (public backend endpoint)"
+      ],
+      "vapi_must_not_store": [
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "AZURE_OPENAI_API_KEY",
+        "SHOPIFY secrets"
+      ],
+      "note": "Vapi should call your backend only. Backend holds Supabase and model credentials server-side."
+    },
+    "server_url_priority_note": "Vapi resolves server URL by priority: function tool > assistant > phone number > account-wide.",
+    "tool_server_url_template": "https://rollicking-overcredulously-dalila.ngrok-free.dev/vapi/tool/<tool-endpoint>"
+  },
+  "tools": [
+    {
+      "name": "search_products",
+      "description": "Find products by semantic query and optional filters",
+      "when_to_use": [
+        "User asks to find, browse, discover, or recommend products",
+        "User asks for products with constraints like price, tags, or stock"
+      ],
+      "when_not_to_use": [
+        "User already selected one exact product and wants details (use open_product)",
+        "User asks to modify cart (use add_to_cart or update_cart)",
+        "User is greeting, affirming, making small talk, or asking general questions",
+        "User says 'yes', 'sure', 'ok' or similar without a new search intent"
+      ],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string" },
+          "filters": {
+            "type": "object",
+            "properties": {
+              "min_price": { "type": "number" },
+              "max_price": { "type": "number" },
+              "tags": { "type": "array", "items": { "type": "string" } },
+              "in_stock_only": { "type": "boolean" },
+              "variant_option_contains": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": ["query"],
+        "additionalProperties": false
+      },
+      "backend_endpoint": "/vapi/tool/search_products",
+      "server_url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/vapi/tool/search_products"
+    },
+    {
+      "name": "open_product",
+      "description": "Open a single product by id. IMPORTANT: You must copy the exact product_id string from the previous search_products result.",
+      "when_to_use": [
+        "User asks to open/view/details of a specific selected product",
+        "User confirms opening a product from search results"
+      ],
+      "when_not_to_use": [
+        "User has not selected a product yet (clarify first)",
+        "User asks to browse products (use search_products)",
+        "You do not have a valid product_id from a previous search_products response"
+      ],
+      "critical_rules": [
+        "You MUST copy the exact product_id string from the previous search_products response candidates array",
+        "DO NOT generate, invent, or guess a product ID",
+        "If you do not have a product_id from a previous search_products response in memory, you CANNOT call this tool",
+        "If user says 'yes' after a single search result, copy that result's product_id",
+        "If user picks by rank ('the second one'), copy the candidate's product_id at that rank position"
+      ],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "product_id": { "type": "string", "description": "The exact product_id string copied from a previous search result" }
+        },
+        "required": ["product_id"],
+        "additionalProperties": false
+      },
+      "backend_endpoint": "/vapi/tool/open_product",
+      "server_url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/vapi/tool/open_product"
+    },
+    {
+      "name": "add_to_cart",
+      "description": "Create a cart add intent for storefront execution",
+      "when_to_use": [
+        "User explicitly asks to add an item to cart"
+      ],
+      "required_before_call": [
+        "product_id",
+        "variant_id",
+        "quantity"
+      ],
+      "clarify_if_missing": [
+        "Ask which product if product_id is missing",
+        "Ask which size/variant if variant_id is missing",
+        "Ask quantity if quantity is missing"
+      ],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "product_id": { "type": "string" },
+          "variant_id": { "type": "string" },
+          "quantity": { "type": "integer", "minimum": 1 }
+        },
+        "required": ["product_id", "variant_id", "quantity"],
+        "additionalProperties": false
+      },
+      "backend_endpoint": "/vapi/tool/add_to_cart_intent",
+      "server_url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/vapi/tool/add_to_cart_intent"
+    },
+    {
+      "name": "update_cart",
+      "description": "Create a cart update intent for storefront execution",
+      "when_to_use": [
+        "User asks to change quantity, switch variant, or remove a cart line"
+      ],
+      "required_before_call": [
+        "line_id",
+        "variant_id",
+        "quantity"
+      ],
+      "clarify_if_missing": [
+        "Ask which cart line if line_id is missing",
+        "Ask target variant if variant_id is missing",
+        "Ask quantity if quantity is missing"
+      ],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "line_id": { "type": "string" },
+          "variant_id": { "type": "string" },
+          "quantity": { "type": "integer", "minimum": 0 }
+        },
+        "required": ["line_id", "variant_id", "quantity"],
+        "additionalProperties": false
+      },
+      "backend_endpoint": "/vapi/tool/update_cart_intent",
+      "server_url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/vapi/tool/update_cart_intent"
+    },
+    {
+      "name": "show_cart",
+      "description": "Open cart view in storefront widget",
+      "when_to_use": [
+        "User asks to see, review, or check cart"
+      ],
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "backend_endpoint": "/vapi/tool/show_cart_intent",
+      "server_url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/vapi/tool/show_cart_intent"
+    },
+    {
+      "name": "navigate",
+      "description": "Navigate to a storefront page without full reload",
+      "when_to_use": [
+        "User asks to go to home, collection, product, cart, or search page"
+      ],
+      "clarify_if_missing": [
+        "Ask destination if both page and url are missing"
+      ],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "string",
+            "enum": ["home", "collection", "product", "cart", "search"]
+          },
+          "url": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "backend_endpoint": "/vapi/tool/navigate_intent",
+      "server_url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/vapi/tool/navigate_intent"
+    }
+  ],
+  "response_envelope": {
+    "type": "object",
+    "properties": {
+      "trace_id": { "type": "string" },
+      "action": {
+        "type": ["object", "null"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["search_products", "open_product", "add_to_cart", "update_cart", "show_cart", "navigate"]
+          },
+          "payload": { "type": "object" }
+        },
+        "required": ["type", "payload"],
+        "additionalProperties": false
+      },
+      "speech": { "type": "string" },
+      "needs_clarification": { "type": "boolean" },
+      "clarification_question": { "type": ["string", "null"] }
+    },
+    "required": ["trace_id", "action", "speech", "needs_clarification", "clarification_question"],
+    "additionalProperties": false
+  }
+}

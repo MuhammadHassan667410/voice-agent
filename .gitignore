@@ -1,0 +1,38 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Tools / local caches
+.firecrawl/
+.tools/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log

@@ -1,0 +1,125 @@
+{
+  "name": "Part4 - Failed Event Replay (DLQ)",
+  "active": false,
+  "nodes": [
+    {
+      "id": "ManualTrigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [220, 260],
+      "parameters": {}
+    },
+    {
+      "id": "Code_LoadReplayInputs",
+      "name": "Load Replay Inputs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 260],
+      "parameters": {
+        "jsCode": "const failures = '__DLQ_REPLAY_EVENTS_JSON__';\nif (!failures || failures.includes('__DLQ_REPLAY_EVENTS_JSON__')) {\n  throw new Error('Paste replay events JSON array into this Code node');\n}\nconst parsed = JSON.parse(failures);\nif (!Array.isArray(parsed)) {\n  throw new Error('Replay payload must be a JSON array');\n}\nreturn parsed.map(evt => ({ json: evt }));"
+      }
+    },
+    {
+      "id": "SwitchTopic",
+      "name": "Route By Topic",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [740, 260],
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            { "conditions": { "options": { "caseSensitive": false }, "conditions": [ { "leftValue": "={{$json.topic}}", "operator": { "type": "string", "operation": "contains" }, "rightValue": "products/create" } ] } },
+            { "conditions": { "options": { "caseSensitive": false }, "conditions": [ { "leftValue": "={{$json.topic}}", "operator": { "type": "string", "operation": "contains" }, "rightValue": "products/update" } ] } },
+            { "conditions": { "options": { "caseSensitive": false }, "conditions": [ { "leftValue": "={{$json.topic}}", "operator": { "type": "string", "operation": "contains" }, "rightValue": "products/delete" } ] } }
+          ]
+        }
+      }
+    },
+    {
+      "id": "Http_Create",
+      "name": "Replay Create",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 140],
+      "parameters": {
+        "method": "POST",
+        "url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/sync/shopify/product-created",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "X-Webhook-Topic", "value": "products/create" },
+            { "name": "X-Webhook-Event-Id", "value": "={{$json.event_id}}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json.envelope}}"
+      }
+    },
+    {
+      "id": "Http_Update",
+      "name": "Replay Update",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 260],
+      "parameters": {
+        "method": "POST",
+        "url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/sync/shopify/product-updated",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "X-Webhook-Topic", "value": "products/update" },
+            { "name": "X-Webhook-Event-Id", "value": "={{$json.event_id}}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json.envelope}}"
+      }
+    },
+    {
+      "id": "Http_Delete",
+      "name": "Replay Delete",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 380],
+      "parameters": {
+        "method": "POST",
+        "url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/sync/shopify/product-deleted",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "X-Webhook-Topic", "value": "products/delete" },
+            { "name": "X-Webhook-Event-Id", "value": "={{$json.event_id}}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json.envelope}}"
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "Load Replay Inputs", "type": "main", "index": 0 }]]
+    },
+    "Load Replay Inputs": {
+      "main": [[{ "node": "Route By Topic", "type": "main", "index": 0 }]]
+    },
+    "Route By Topic": {
+      "main": [
+        [{ "node": "Replay Create", "type": "main", "index": 0 }],
+        [{ "node": "Replay Update", "type": "main", "index": 0 }],
+        [{ "node": "Replay Delete", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

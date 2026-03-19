@@ -1,0 +1,74 @@
+{
+  "name": "Part4 - Owner Manual Reindex",
+  "active": false,
+  "nodes": [
+    {
+      "id": "Webhook_ManualReindex",
+      "name": "Webhook Manual Reindex",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 220],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "owner/manual-reindex",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "Code_ValidateBody",
+      "name": "Validate Reindex Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 220],
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst scope = body.scope || 'all';\nconst product_ids = Array.isArray(body.product_ids) ? body.product_ids : [];\nif (scope === 'ids' && product_ids.length === 0) {\n  throw new Error('product_ids is required when scope=ids');\n}\nreturn [{ json: { scope, product_ids, reason: body.reason || 'owner_manual_reindex' } }];"
+      }
+    },
+    {
+      "id": "Http_Reindex",
+      "name": "Call Backend Reindex",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [780, 220],
+      "parameters": {
+        "method": "POST",
+        "url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/sync/reindex",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "X-Admin-Token", "value": "__REINDEX_ADMIN_TOKEN__" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}"
+      }
+    },
+    {
+      "id": "Respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1040, 220],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Manual Reindex": {
+      "main": [[{ "node": "Validate Reindex Body", "type": "main", "index": 0 }]]
+    },
+    "Validate Reindex Body": {
+      "main": [[{ "node": "Call Backend Reindex", "type": "main", "index": 0 }]]
+    },
+    "Call Backend Reindex": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
