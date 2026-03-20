@@ -11,15 +11,18 @@
 
     #ev-ai-root {
       --ev-font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      --ev-panel-bg: linear-gradient(155deg, rgba(26, 30, 36, 0.95) 0%, rgba(15, 18, 22, 0.98) 100%);
-      --ev-panel-border: rgba(255, 255, 255, 0.08);
+      --ev-panel-bg: linear-gradient(155deg, rgba(19, 25, 35, 0.96) 0%, rgba(10, 13, 19, 0.99) 100%);
+      --ev-panel-border: rgba(255, 255, 255, 0.1);
       --ev-text-main: #ffffff;
-      --ev-text-muted: #8b96a5;
-      --ev-accent: #1fdf64;
-      --ev-accent-glow: rgba(31, 223, 100, 0.3);
-      --ev-card-bg: rgba(255, 255, 255, 0.03);
-      --ev-card-border: rgba(255, 255, 255, 0.06);
-      --ev-orb-gradient: linear-gradient(135deg, #00f2fe 0%, #1fdf64 100%);
+      --ev-text-muted: #9aa7bc;
+      --ev-accent: #00ff7f;
+      --ev-accent-2: #0de3ff;
+      --ev-accent-warm: #ffd447;
+      --ev-accent-glow: rgba(0, 255, 127, 0.38);
+      --ev-card-bg: rgba(255, 255, 255, 0.04);
+      --ev-card-border: rgba(255, 255, 255, 0.08);
+      --ev-orb-gradient: radial-gradient(circle at 30% 20%, #2b3142 0%, #171d28 56%, #0e1118 100%);
+      --ev-hover-card: rgba(255, 255, 255, 0.09);
       --ev-z: 2147483647;
       
       font-family: var(--ev-font);
@@ -39,29 +42,54 @@
       bottom: 24px; right: 24px;
       z-index: var(--ev-z);
       display: flex; flex-direction: column; align-items: flex-end; gap: 12px;
+      filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.45));
+      animation: ev-widget-float 4.2s ease-in-out infinite;
     }
 
     /* Small transcript bubble above orb */
     .ev-ai-transcript-bubble {
-      background: var(--ev-panel-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--ev-panel-border);
+      position: relative;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(13, 227, 255, 0.16) 0%, transparent 42%),
+        radial-gradient(circle at 100% 100%, rgba(0, 255, 127, 0.16) 0%, transparent 36%),
+        var(--ev-panel-bg);
+      backdrop-filter: blur(18px) saturate(140%);
+      -webkit-backdrop-filter: blur(18px) saturate(140%);
+      border: 1px solid rgba(255, 255, 255, 0.16);
       color: var(--ev-text-main);
-      padding: 10px 16px;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      padding: 12px 14px;
+      border-radius: 14px;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.48);
       font-size: 13px;
-      max-width: 250px;
-      text-align: right;
+      max-width: 320px;
+      text-align: left;
+      line-height: 1.45;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s ease, transform 0.3s ease;
-      transform: translateY(10px);
+      transition: opacity 0.34s ease, transform 0.34s ease;
+      transform: translateY(12px) scale(0.97);
     }
     .ev-ai-transcript-bubble.ev-visible {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
+    }
+
+    .ev-ai-transcript-bubble:after {
+      content: "";
+      position: absolute;
+      right: 22px;
+      bottom: -8px;
+      width: 14px;
+      height: 14px;
+      transform: rotate(45deg);
+      background: #141b26;
+      border-right: 1px solid rgba(255,255,255,0.18);
+      border-bottom: 1px solid rgba(255,255,255,0.18);
+    }
+
+    .ev-ai-launcher-wrapper:hover .ev-ai-transcript-bubble {
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
     
     .ev-ai-status-indicator {
@@ -77,39 +105,89 @@
     }
     
     .ev-ai-status-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--ev-accent); box-shadow: 0 0 8px var(--ev-accent);
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--ev-accent); box-shadow: 0 0 12px var(--ev-accent);
+      animation: ev-pulse-dot 1.6s ease-in-out infinite;
     }
 
     /* The floating orb button itself */
     .ev-ai-launcher-btn {
-      width: 64px; height: 64px;
+      width: 70px; height: 70px;
       border-radius: 50%;
-      background: var(--ev-panel-bg);
+      background:
+        radial-gradient(circle at 25% 20%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.01) 33%),
+        radial-gradient(circle at 70% 82%, rgba(0,255,127,0.1) 0%, rgba(0,255,127,0) 42%),
+        var(--ev-orb-gradient);
       backdrop-filter: blur(16px);
-      border: 1px solid var(--ev-panel-border);
+      border: 1px solid rgba(255,255,255,0.2);
       color: var(--ev-text-main);
-      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      box-shadow:
+        0 8px 28px rgba(0,0,0,0.55),
+        0 0 0 1px rgba(255,255,255,0.07) inset,
+        0 0 24px var(--ev-accent-glow);
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      transition: all 0.3s ease;
+      transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
       position: relative;
+      overflow: hidden;
+      animation: ev-orb-glow 2.8s ease-in-out infinite;
     }
+
+    .ev-ai-launcher-btn:before {
+      content: "";
+      position: absolute;
+      inset: -24%;
+      background:
+        conic-gradient(from 40deg, rgba(13,227,255,0) 0%, rgba(13,227,255,0.36) 30%, rgba(0,255,127,0.35) 55%, rgba(255,212,71,0.28) 72%, rgba(13,227,255,0) 100%);
+      filter: blur(12px);
+      opacity: 0.7;
+      animation: ev-rotor 7s linear infinite;
+      pointer-events: none;
+    }
+
+    .ev-ai-launcher-btn:after {
+      content: "";
+      position: absolute;
+      inset: 15%;
+      border-radius: 50%;
+      border: 1.5px dashed rgba(255,255,255,0.2);
+      pointer-events: none;
+      animation: ev-ball-spin 16s linear infinite;
+    }
+
     .ev-ai-launcher-btn:hover {
-      transform: translateY(-2px) scale(1.05);
-      border-color: var(--ev-accent);
-      box-shadow: 0 12px 40px var(--ev-accent-glow);
+      transform: translateY(-4px) scale(1.07);
+      border-color: rgba(13,227,255,0.8);
+      box-shadow:
+        0 14px 42px rgba(0,0,0,0.6),
+        0 0 26px rgba(13,227,255,0.45),
+        0 0 36px rgba(0,255,127,0.35);
     }
-    .ev-ai-launcher-btn svg { width: 32px; height: 32px; transition: opacity 0.3s; }
+    .ev-ai-launcher-btn svg {
+      width: 44px; height: 44px;
+      transition: opacity 0.3s;
+      z-index: 2;
+      filter: drop-shadow(0 0 8px rgba(255,255,255,0.22));
+    }
+
+    .ev-ai-mic-icon {
+      stroke-width: 1.8;
+    }
     
     /* Recording / Listening State for Orb */
     .ev-ai-launcher-btn.ev-listening {
-      border-color: #00f2fe;
-      box-shadow: 0 0 30px rgba(0, 242, 254, 0.4);
+      border-color: var(--ev-accent-2);
+      box-shadow:
+        0 0 0 1px rgba(13,227,255,0.6) inset,
+        0 0 34px rgba(13, 227, 255, 0.52),
+        0 0 54px rgba(13, 227, 255, 0.25);
     }
     .ev-ai-launcher-btn.ev-speaking {
       border-color: var(--ev-accent);
-      box-shadow: 0 0 30px var(--ev-accent-glow);
+      box-shadow:
+        0 0 0 1px rgba(0,255,127,0.65) inset,
+        0 0 34px rgba(0,255,127,0.52),
+        0 0 58px rgba(0,255,127,0.26);
     }
     
     /* Close icon inside orb */
@@ -118,7 +196,7 @@
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       opacity: 0;
-      width: 24px !important; height: 24px !important;
+      width: 26px !important; height: 26px !important;
     }
     .ev-ai-launcher-btn.ev-active .ev-ai-mic-icon { opacity: 0; }
     .ev-ai-launcher-btn.ev-active .ev-ai-close-icon { opacity: 1; }
@@ -126,97 +204,302 @@
     /* Orb mini visualizer */
     .ev-ai-mini-bars {
       position: absolute;
-      bottom: -10px;
+      bottom: -13px;
       display: flex; gap: 2px; height: 12px; align-items: center; margin: 4px 0;
       opacity: 0;
       transition: opacity 0.3s;
+      z-index: 3;
     }
     .ev-ai-launcher-btn.ev-active .ev-ai-mini-bars { opacity: 1; }
-    .ev-ai-mini-bar { width: 2px; background: #00f2fe; border-radius: 2px; animation: ev-mini-bounce 0.8s infinite ease-in-out; }
+    .ev-ai-mini-bar {
+      width: 3px;
+      background: linear-gradient(180deg, var(--ev-accent-2), var(--ev-accent));
+      border-radius: 2px;
+      box-shadow: 0 0 8px rgba(13,227,255,0.45);
+      animation: ev-mini-bounce 0.8s infinite ease-in-out;
+    }
     .ev-ai-mini-bar:nth-child(1) { height: 4px; animation-delay: 0s; }
     .ev-ai-mini-bar:nth-child(2) { height: 8px; animation-delay: 0.1s; }
-    .ev-ai-mini-bar:nth-child(3) { height: 12px; animation-delay: 0.2s; background: var(--ev-accent); }
+    .ev-ai-mini-bar:nth-child(3) { height: 12px; animation-delay: 0.2s; background: linear-gradient(180deg, var(--ev-accent-warm), var(--ev-accent)); }
     .ev-ai-mini-bar:nth-child(4) { height: 8px; animation-delay: 0.3s; }
     .ev-ai-mini-bar:nth-child(5) { height: 4px; animation-delay: 0.4s; }
 
     @keyframes ev-mini-bounce { 0%, 100% { transform: scaleY(0.5); } 50% { transform: scaleY(1); } }
+    @keyframes ev-widget-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+    @keyframes ev-orb-glow {
+      0%, 100% { box-shadow: 0 8px 28px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.07) inset, 0 0 22px rgba(0,255,127,0.24); }
+      50% { box-shadow: 0 10px 34px rgba(0,0,0,0.58), 0 0 0 1px rgba(255,255,255,0.12) inset, 0 0 34px rgba(13,227,255,0.32), 0 0 42px rgba(0,255,127,0.26); }
+    }
+    @keyframes ev-rotor { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes ev-ball-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes ev-pulse-dot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.18); opacity: 0.85; }
+    }
+
+    @media (max-width: 640px) {
+      .ev-ai-launcher-wrapper { right: 16px; bottom: 16px; }
+      .ev-ai-launcher-btn { width: 64px; height: 64px; }
+      .ev-ai-transcript-bubble { max-width: 260px; font-size: 12px; }
+    }
 
     /* -------------------------------------- */
     /* 2. THE SIDE PANEL (DOM INJECTION)      */
     /* -------------------------------------- */
     .ev-ai-side-panel {
       position: fixed;
-      top: 0; right: -400px;
-      width: 400px; 
-      height: 100vh;
+      left: 50%;
+      right: auto;
+      top: auto;
+      bottom: 10px;
+      transform: translateX(-50%) translateY(105%);
+      width: min(1240px, calc(100vw - 14px));
+      height: min(88vh, 940px);
       max-width: 100vw;
-      background: var(--ev-panel-bg);
-      backdrop-filter: blur(30px);
-      -webkit-backdrop-filter: blur(30px);
-      border-left: 1px solid var(--ev-panel-border);
-      box-shadow: -10px 0 40px rgba(0,0,0,0.5);
-      z-index: calc(var(--ev-z) - 1); /* Just behind the orb */
-      display: flex; flex-direction: column;
-      transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 22px 22px 0 0;
+      overflow: auto;
+      background:
+        radial-gradient(circle at 8% 0%, rgba(13, 227, 255, 0.16) 0%, transparent 30%),
+        radial-gradient(circle at 92% 100%, rgba(0, 255, 127, 0.16) 0%, transparent 36%),
+        linear-gradient(150deg, rgba(16, 23, 35, 0.98) 0%, rgba(10, 15, 24, 0.98) 50%, rgba(7, 11, 18, 0.99) 100%);
+      backdrop-filter: blur(30px) saturate(145%);
+      -webkit-backdrop-filter: blur(30px) saturate(145%);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow:
+        0 -20px 60px rgba(0,0,0,0.62),
+        0 0 40px rgba(13,227,255,0.16),
+        0 0 56px rgba(0,255,127,0.14);
+      z-index: calc(var(--ev-z) - 1);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.46s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease;
+      animation: ev-panel-glow 4.2s ease-in-out infinite;
+      min-width: 420px;
+      min-height: 500px;
+      max-width: calc(100vw - 12px);
+      max-height: 94vh;
     }
     .ev-ai-side-panel.ev-open {
-      right: 0;
+      transform: translateX(-50%) translateY(0);
     }
 
     .ev-ai-panel-header {
-      padding: 20px;
-      border-bottom: 1px solid var(--ev-panel-border);
+      padding: 18px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.14);
       display: flex; justify-content: space-between; align-items: center;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0));
     }
     .ev-ai-panel-header h2 {
-      font-size: 16px; font-weight: 600; color: var(--ev-text-main);
+      position: relative;
+      max-width: calc(100% - 56px);
+      font-size: clamp(20px, 2.6vw, 34px);
+      font-weight: 700;
+      color: #f4f8ff;
+      letter-spacing: 0.3px;
+      line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      background: linear-gradient(90deg, #eaf4ff 0%, #8ff9c1 45%, #82ecff 70%, #eaf4ff 100%);
+      background-size: 220% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 14px rgba(13,227,255,0.2);
+      animation: ev-heading-shift 5.8s linear infinite;
+    }
+    .ev-ai-panel-header h2:after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -5px;
+      width: 58%;
+      height: 2px;
+      border-radius: 6px;
+      background: linear-gradient(90deg, rgba(13,227,255,0.95), rgba(0,255,127,0.82), rgba(255,212,71,0.8));
+      box-shadow: 0 0 14px rgba(13,227,255,0.28);
+      animation: ev-header-line 2.8s ease-in-out infinite;
     }
     .ev-ai-close-panel-btn {
-      background: none; border: none; color: var(--ev-text-muted); font-size: 24px; cursor: pointer;
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.05);
+      color: #c8d5ea;
+      font-size: 26px;
+      line-height: 1;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
     }
-    .ev-ai-close-panel-btn:hover { color: var(--ev-text-main); }
+    .ev-ai-close-panel-btn:hover {
+      color: #fff;
+      background: rgba(13,227,255,0.16);
+      transform: rotate(90deg) scale(1.06);
+    }
 
     .ev-ai-panel-content {
       flex: 1; overflow-y: auto; 
-      padding: 20px;
-      display: flex; flex-direction: column; gap: 20px;
+      padding: 20px 22px 120px;
+      display: flex; flex-direction: column; gap: 16px;
+      min-height: 0;
     }
-    .ev-ai-panel-content::-webkit-scrollbar { width: 6px; }
+    .ev-ai-panel-content::-webkit-scrollbar { width: 9px; }
     .ev-ai-panel-content::-webkit-scrollbar-track { background: transparent; }
-    .ev-ai-panel-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    .ev-ai-panel-content::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, rgba(13,227,255,0.38), rgba(0,255,127,0.38));
+      border-radius: 12px;
+      border: 2px solid rgba(0,0,0,0.25);
+    }
 
     /* Product Grid / Details inside Side Panel */
     .ev-ai-product-card {
-      background: var(--ev-card-bg);
-      border: 1px solid var(--ev-card-border);
-      border-radius: 12px; padding: 12px;
+      background:
+        linear-gradient(132deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%),
+        var(--ev-card-bg);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 14px;
       display: flex; gap: 12px;
-      transition: background 0.2s;
+      align-items: center;
+      transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.26);
     }
-    .ev-ai-product-card:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); }
+    .ev-ai-product-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(13,227,255,0.42);
+      box-shadow: 0 14px 30px rgba(0,0,0,0.34), 0 0 20px rgba(13,227,255,0.14);
+      background: var(--ev-hover-card);
+    }
     .ev-ai-img-box {
-      width: 80px; height: 80px; border-radius: 8px; flex-shrink: 0;
+      width: clamp(78px, 9.4vw, 108px);
+      height: clamp(78px, 9.4vw, 108px);
+      border-radius: 12px;
+      flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,0.16);
       background: rgba(255,255,255,0.05);
       display: flex; align-items: center; justify-content: center; padding: 4px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
     }
-    .ev-ai-img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
-    .ev-ai-card-info { display: flex; flex-direction: column; justify-content: center; gap: 4px; flex: 1; }
-    .ev-ai-card-title { font-size: 13px; font-weight: 500; color: var(--ev-text-main); line-height: 1.3; }
-    .ev-ai-card-price { font-size: 12px; color: var(--ev-text-muted); }
+    .ev-ai-img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+    .ev-ai-card-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 8px;
+      flex: 1;
+    }
+    .ev-ai-card-title {
+      font-size: clamp(18px, 2.2vw, 32px);
+      font-weight: 700;
+      color: #f5f9ff;
+      line-height: 1.25;
+      letter-spacing: 0.2px;
+      text-shadow: 0 0 8px rgba(13,227,255,0.15);
+    }
+    .ev-ai-card-price {
+      font-size: clamp(16px, 1.8vw, 26px);
+      font-weight: 700;
+      color: #8df8bf;
+    }
     
     .ev-ai-btn-primary {
-      padding: 10px 0; border: none; border-radius: 8px;
-      background: var(--ev-accent); color: #000; font-size: 12px; font-weight: 700;
-      letter-spacing: 0.5px; cursor: pointer; transition: opacity 0.2s; width: 100%; text-align: center;
+      padding: 14px 18px !important;
+      border: 1px solid rgba(255,255,255,0.24);
+      border-radius: 12px;
+      background: linear-gradient(135deg, #0de3ff 0%, #00ff7f 50%, #ffd447 100%);
+      color: #06121b;
+      font-size: 16px !important;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
+      width: 100%;
+      text-align: center;
+      text-transform: uppercase;
+      box-shadow: 0 10px 22px rgba(0,0,0,0.25), 0 0 20px rgba(0,255,127,0.2);
     }
-    .ev-ai-btn-primary:hover { opacity: 0.8; box-shadow: 0 0 10px var(--ev-accent-glow); }
+    .ev-ai-btn-primary:hover {
+      transform: translateY(-2px) scale(1.02);
+      filter: brightness(1.05);
+      box-shadow: 0 14px 28px rgba(0,0,0,0.3), 0 0 26px rgba(13,227,255,0.3);
+    }
     
     .ev-ai-btn-secondary {
-      padding: 8px 12px; border: 1px solid var(--ev-panel-border); border-radius: 8px;
-      background: transparent; color: var(--ev-text-main); font-size: 11px;
-      cursor: pointer; transition: background 0.2s;
+      padding: 12px 16px !important;
+      border: 1px solid rgba(13,227,255,0.4);
+      border-radius: 11px;
+      background: linear-gradient(135deg, rgba(13,227,255,0.16), rgba(0,255,127,0.12));
+      color: #f5fbff;
+      font-size: 15px !important;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      text-decoration: none;
     }
-    .ev-ai-btn-secondary:hover { background: rgba(255,255,255,0.1); }
+    .ev-ai-btn-secondary:hover {
+      transform: translateY(-1px);
+      background: linear-gradient(135deg, rgba(13,227,255,0.26), rgba(0,255,127,0.22));
+      box-shadow: 0 0 20px rgba(13,227,255,0.25);
+    }
+
+    #ev-ai-stage > div > img {
+      width: 100% !important;
+      min-height: 220px !important;
+      max-height: clamp(320px, 52vh, 600px) !important;
+      object-fit: contain !important;
+      object-position: center !important;
+      border-radius: 16px !important;
+      margin-bottom: 18px !important;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.02);
+      box-shadow: 0 14px 28px rgba(0,0,0,0.34);
+    }
+
+    #ev-ai-stage > div > h3 {
+      font-size: clamp(21px, 3.2vw, 34px) !important;
+      font-weight: 800 !important;
+      line-height: 1.2 !important;
+      margin-bottom: 10px !important;
+    }
+
+    #ev-ai-stage > div > p {
+      font-size: clamp(14px, 1.35vw, 18px) !important;
+      line-height: 1.55 !important;
+    }
+
+    @keyframes ev-heading-shift {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 220% 50%; }
+    }
+    @keyframes ev-header-line {
+      0%, 100% { opacity: 0.65; transform: scaleX(0.94); transform-origin: left; }
+      50% { opacity: 1; transform: scaleX(1.05); transform-origin: left; }
+    }
+
+    @keyframes ev-panel-glow {
+      0%, 100% {
+        box-shadow: 0 -20px 60px rgba(0,0,0,0.62), 0 0 34px rgba(13,227,255,0.14), 0 0 46px rgba(0,255,127,0.12);
+      }
+      50% {
+        box-shadow: 0 -20px 60px rgba(0,0,0,0.62), 0 0 44px rgba(13,227,255,0.2), 0 0 60px rgba(0,255,127,0.18);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .ev-ai-side-panel {
+        width: calc(100vw - 8px);
+        height: min(90vh, 860px);
+        min-width: 300px;
+        min-height: 420px;
+      }
+      .ev-ai-panel-content { padding-bottom: 110px; }
+    }
 
   </style>
 
@@ -229,15 +512,14 @@
       <div class="ev-ai-status-indicator" id="ev-ai-status-indicator">
         READY <span class="ev-ai-status-dot" style="background:#8b96a5;box-shadow:none;"></span>
       </div>
-      <div id="ev-ai-transcript-text" style="line-height:1.4;">Tap the orb to start talking!</div>
+      <div id="ev-ai-transcript-text" style="line-height:1.4;">Hi, I am John, your AI Voice Assistant! I can help you find products you need, give recommendations, and add products to your cart. Click here to talk to me.</div>
     </div>
     
     <button id="ev-ai-launcher-btn" class="ev-ai-launcher-btn" aria-label="Open AI Assistant">
-      <svg class="ev-ai-mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
-        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-        <line x1="12" y1="19" x2="12" y2="22"></line>
-        <line x1="8" y1="22" x2="16" y2="22"></line>
+      <svg class="ev-ai-mic-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="32" cy="32" r="22"></circle>
+        <path d="M32 10l5 7 9 1-6 7 2 10-10-4-10 4 2-10-6-7 9-1z"></path>
+        <path d="M17 26l8 5M47 26l-8 5M23 43l9-6 9 6"></path>
       </svg>
       <svg class="ev-ai-close-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -288,8 +570,8 @@
   <!-- JAVASCRIPT STATE MACHINE & LOGIC           -->
   <!-- ========================================== -->
   <script>
-    var EV_VAPI_PUBLIC_KEY = '07474656-0855-4597-96c9-322983b59ce0';
-    var EV_VAPI_ASSISTANT_ID = '64e9aec9-cca6-4cea-a0dd-92695be42a4a';
+    var EV_VAPI_PUBLIC_KEY = 'e92c4f5a-6b3d-4975-813c-ecc90a66eea2';
+    var EV_VAPI_ASSISTANT_ID = 'b0969356-05e8-40c4-ae11-6bb3d25b9ef7';
 
     window.evAiInit = function() {
       // --------------------------------------
@@ -767,8 +1049,8 @@
       vapiInstance.on('speech-end', function() { state.vapiStatus = 'listening'; render(); });
 
       vapiInstance.on('message', function(message) {
-        if (message.type === 'transcript' && message.transcriptType === 'final') {
-          state.transcript = message.transcript;
+        if (message.type === 'transcript' && typeof message.transcript === 'string' && message.transcript.trim()) {
+          state.transcript = message.transcript.trim();
           render();
         }
 
