@@ -889,6 +889,23 @@
       function openProductById(productId) {
         if (!productId) return;
         var numericProductId = typeof productId === 'string' && productId.indexOf('gid://') !== -1 ? productId.split('/').pop() : productId;
+        var encodedOriginalId = encodeURIComponent(productId);
+        var encodedNumericId = encodeURIComponent(String(numericProductId || ''));
+
+        function fetchProductDetailsById() {
+          var backendUrl = window.EV_BACKEND_URL || 'https://muhammadhassan.tech';
+          return fetch(backendUrl + '/product/' + encodedOriginalId)
+            .then(function(res) {
+              if (res.ok) return res.json();
+              if (res.status === 404 && encodedNumericId && encodedNumericId !== encodedOriginalId) {
+                return fetch(backendUrl + '/product/' + encodedNumericId).then(function(secondRes) {
+                  if (!secondRes.ok) throw new Error('Product lookup failed with status ' + secondRes.status);
+                  return secondRes.json();
+                });
+              }
+              throw new Error('Product lookup failed with status ' + res.status);
+            });
+        }
         
         // Try cache first
         var found = null;
@@ -911,9 +928,7 @@
           render();
 
           // Independent frontend fetch logic since Vapi Web SDK doesn't natively forward server webhook responses
-          var backendUrl = window.EV_BACKEND_URL || 'https://rollicking-overcredulously-dalila.ngrok-free.dev';
-          fetch(backendUrl + '/product/' + encodeURIComponent(productId))
-            .then(function(res) { return res.json(); })
+          fetchProductDetailsById()
             .then(function(data) {
                 if (data && data.item) {
                     state.products = [data.item];
@@ -937,14 +952,22 @@
       window.handleAction = function(action) {
         if (!action || !action.type) return;
         var payload = action.payload || {};
+        if (typeof payload === 'string') {
+          try { payload = JSON.parse(payload); } catch (e) { payload = {}; }
+        }
+        if (!payload || typeof payload !== 'object') payload = {};
 
         switch (action.type) {
           case 'search_products':
             var q = payload.query || '';
             state.view = 'search_results';
-            
-            if (payload.candidates && payload.candidates.length > 0) {
-                state.products = payload.candidates;
+
+            var candidates = Array.isArray(payload.candidates) ? payload.candidates : [];
+            var items = Array.isArray(payload.items) ? payload.items : [];
+            var searchResults = candidates.length > 0 ? candidates : items;
+
+            if (searchResults.length > 0) {
+                state.products = searchResults;
                 state.isPanelOpen = true;
                 if (els.panelTitle) els.panelTitle.textContent = (state.products.length === 1) ? 'Found 1 Product' : 'Search Results';
                 render();
@@ -954,7 +977,7 @@
                 if (els.panelTitle) els.panelTitle.textContent = 'Searching ' + q + '...';
                 render();
                 
-                var searchBackendUrl = window.EV_BACKEND_URL || 'https://rollicking-overcredulously-dalila.ngrok-free.dev';
+                var searchBackendUrl = window.EV_BACKEND_URL || 'https://muhammadhassan.tech';
                 fetch(searchBackendUrl + '/search-products', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -980,7 +1003,13 @@
             break;
           case 'open_product':
             var pid = payload.product_id || payload.id || '';
-            if (payload.title && (payload.variants || payload.images || payload.price)) {
+            var payloadItem = (payload.item && typeof payload.item === 'object') ? payload.item : null;
+            if (payloadItem && payloadItem.title) {
+              state.products = [payloadItem];
+              state.view = 'product_detail';
+              state.isPanelOpen = true;
+              render();
+            } else if (payload.title && (payload.variants || payload.images || payload.price !== undefined)) {
               state.products = [payload];
               state.view = 'product_detail';
               state.isPanelOpen = true;

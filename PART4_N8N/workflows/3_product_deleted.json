@@ -35,7 +35,7 @@
       "position": [1260, 360],
       "parameters": {
         "method": "POST",
-        "url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/sync/shopify/product-deleted",
+        "url": "https://muhammadhassan.tech/sync/shopify/product-deleted",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [

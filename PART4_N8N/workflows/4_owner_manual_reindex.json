@@ -32,7 +32,7 @@
       "position": [780, 220],
       "parameters": {
         "method": "POST",
-        "url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/sync/reindex",
+        "url": "https://muhammadhassan.tech/sync/reindex",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [

@@ -1,7 +1,7 @@
 {
   "vapi_registration": {
     "purpose": "Map Vapi tool calls to backend intent endpoints.",
-    "backend_public_base_url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/",
+    "backend_public_base_url": "https://muhammadhassan.tech/",
     "credential_policy": {
       "vapi_needs": [
         "Vapi API key (inside Vapi dashboard/API only)",
@@ -16,7 +16,7 @@
       "note": "Vapi should call your backend only. Backend holds Supabase and model credentials server-side."
     },
     "server_url_priority_note": "Vapi resolves server URL by priority: function tool > assistant > phone number > account-wide.",
-    "tool_server_url_template": "https://rollicking-overcredulously-dalila.ngrok-free.dev/vapi/tool/<tool-endpoint>"
+    "tool_server_url_template": "https://muhammadhassan.tech/vapi/tool/<tool-endpoint>"
   },
   "tools": [
     {
@@ -52,7 +52,7 @@
         "additionalProperties": false
       },
       "backend_endpoint": "/vapi/tool/search_products",
-      "server_url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/vapi/tool/search_products"
+      "server_url": "https://muhammadhassan.tech/vapi/tool/search_products"
     },
     {
       "name": "open_product",
@@ -82,7 +82,7 @@
         "additionalProperties": false
       },
       "backend_endpoint": "/vapi/tool/open_product",
-      "server_url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/vapi/tool/open_product"
+      "server_url": "https://muhammadhassan.tech/vapi/tool/open_product"
     },
     {
       "name": "add_to_cart",
@@ -111,7 +111,7 @@
         "additionalProperties": false
       },
       "backend_endpoint": "/vapi/tool/add_to_cart_intent",
-      "server_url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/vapi/tool/add_to_cart_intent"
+      "server_url": "https://muhammadhassan.tech/vapi/tool/add_to_cart_intent"
     },
     {
       "name": "update_cart",
@@ -140,7 +140,7 @@
         "additionalProperties": false
       },
       "backend_endpoint": "/vapi/tool/update_cart_intent",
-      "server_url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/vapi/tool/update_cart_intent"
+      "server_url": "https://muhammadhassan.tech/vapi/tool/update_cart_intent"
     },
     {
       "name": "show_cart",
@@ -154,7 +154,7 @@
         "additionalProperties": false
       },
       "backend_endpoint": "/vapi/tool/show_cart_intent",
-      "server_url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/vapi/tool/show_cart_intent"
+      "server_url": "https://muhammadhassan.tech/vapi/tool/show_cart_intent"
     },
     {
       "name": "navigate",
@@ -177,7 +177,7 @@
         "additionalProperties": false
       },
       "backend_endpoint": "/vapi/tool/navigate_intent",
-      "server_url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/vapi/tool/navigate_intent"
+      "server_url": "https://muhammadhassan.tech/vapi/tool/navigate_intent"
     }
   ],
   "response_envelope": {

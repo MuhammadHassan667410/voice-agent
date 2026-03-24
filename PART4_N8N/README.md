@@ -30,7 +30,7 @@ Free-trial note:
    - `__REINDEX_ADMIN_TOKEN__`
    - `__DLQ_REPLAY_EVENTS_JSON__`
 - Backend URLs are already set to:
-   - `https://rollicking-overcredulously-dalila.ngrok-free.dev`
+   - `https://muhammadhassan.tech`
 
 ## Common Header Mapping (Shopify -> n8n)
 For Shopify webhook flows, map these headers from webhook request:

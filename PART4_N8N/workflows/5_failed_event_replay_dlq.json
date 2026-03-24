@@ -45,7 +45,7 @@
       "position": [1000, 140],
       "parameters": {
         "method": "POST",
-        "url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/sync/shopify/product-created",
+        "url": "https://muhammadhassan.tech/sync/shopify/product-created",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -67,7 +67,7 @@
       "position": [1000, 260],
       "parameters": {
         "method": "POST",
-        "url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/sync/shopify/product-updated",
+        "url": "https://muhammadhassan.tech/sync/shopify/product-updated",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -89,7 +89,7 @@
       "position": [1000, 380],
       "parameters": {
         "method": "POST",
-        "url": "https://rollicking-overcredulously-dalila.ngrok-free.dev/sync/shopify/product-deleted",
+        "url": "https://muhammadhassan.tech/sync/shopify/product-deleted",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
