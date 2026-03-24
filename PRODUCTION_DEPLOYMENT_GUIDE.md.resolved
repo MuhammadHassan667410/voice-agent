@@ -1,0 +1,81 @@
+# 🚀 Shopify Voice Agent Production Deployment Guide
+
+This guide is a complete, step-by-step master template for taking this locally running development prototype (which currently relies on `ngrok`, demo API keys, and a demo store) and deploying it flawlessly to a **real, production Shopify store with a custom domain and thousands of products.** 
+
+Whenever you get a new client, follow this guide perfectly to spin up their own voice AI e-commerce system.
+
+---
+
+## 1. Backend API (FastAPI) Hosting
+**Goal:** Move your Python backend off of your local machine and `ngrok` onto a real, always-on server (e.g., Render, Railway, AWS, DigitalOcean).
+
+### Steps to configure for Production:
+1. **Remove Ngrok:** You no longer need `npx ngrok http 8000`. You will deploy the FastAPI app to a cloud host. 
+2. **Environment [.env](file:///c:/Users/muham/My%20Portfolio%20Projects/voice%20agent/.env) Variables:** On your chosen hosting platform, configure these environment variables:
+   - `OPENAI_API_KEY`: The production OpenAI key (for embedding vector searches).
+   - `SUPABASE_URL`: The production Supabase database URL.
+   - `SUPABASE_KEY`: The production `service_role` key (NEVER expose this to the frontend).
+   - `CORS_ORIGINS`: Update this to `https://www.client-real-store.com` to prevent other domains from querying the API and costing you money.
+3. **Deploy:** Deploy the Python FastAPI folder using a Dockerfile or standard Python WSGI setup (Render and Railway can parse the [requirements.txt](file:///c:/Users/muham/My%20Portfolio%20Projects/voice%20agent/backend/requirements.txt) perfectly). Let's assume your new API URL is `https://api.yourclient.com`.
+
+---
+
+## 2. Database (Supabase Vector Store)
+**Goal:** Provision a completely isolated database for the client so their products are safe.
+
+1. **Create New Project:** Create a fresh Supabase project for the client.
+2. **Execute Schema:** Run the exact SQL found in `backend/app/db/supabase/schema.sql` completely, ensuring the `pgvector` extension is enabled.
+3. **Index for Scale:** If the client has over 1,000 products, you MUST build an index so that Voice AI product searches are instant (under 50ms):
+   ```sql
+   CREATE INDEX ON products USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+   ```
+
+---
+
+## 3. Webhooks & Data Sync (n8n or direct)
+**Goal:** Move the local test webhooks to a production cloud n8n deployment or directly into your FastAPI codebase to handle the real Shopify lifecycle.
+
+1. **Host n8n in Production:** You need a cloud-hosted n8n instance (n8n Cloud or self-hosted on AWS/Digital Ocean). Let's assume the webhook URL is `https://n8n.yourclient.com/webhook/shopify`.
+2. **Shopify Admin Webhooks Settings:** Inside the Client's real *Shopify Admin -> Settings -> Notifications -> Webhooks*:
+   - Create Webhook event: `Products/Create` -> Point to n8n webhook URL.
+   - Create Webhook event: `Products/Update` -> Point to n8n webhook URL.
+   - Create Webhook event: `Products/Delete` -> Point to n8n webhook URL.
+3. **Initial Bulk Sync:** Since the store already has products, webhooks won't trigger for old data. You must build a one-time "Fetch All Products" workflow in n8n (using Shopify's Bulk Operation GraphQL API) to ingest all 10,000 products into Supabase.
+
+---
+
+## 4. Voice Agent Setup (Vapi Dashboard)
+**Goal:** Give the client their own Voice Assistant id and securely lock it to the real backend.
+
+1. **Server URL Configuration:** In the Vapi Dashboard, previously the "Server URL" for tools was pointing to `https://your-ngrok.ngrok.app/vapi/tool/....`.
+   - You MUST update every single tool to point to your new FastAPI server: `https://api.yourclient.com/vapi/tool/...`.
+2. **Instructions Tuning:** Copy the contents of [PART5_VAPI/assistant_instructions.md](file:///c:/Users/muham/My%20Portfolio%20Projects/voice%20agent/PART5_VAPI/assistant_instructions.md) into Vapi's system prompt! 
+   - **Important:** Customize the first paragraph for the client's store (e.g., "You are an AI assistant for PitchPro, a premium soccer gear store..." -> "You are an AI assistant for [Client Name], a premium [Client Industry] store...").
+   - **Retain the Tool Rules:** Ensure rules 1 through 6 outlining how to return payloads and *not to apologize for empty cart payloads* are preserved.
+
+---
+
+## 5. Frontend Shopify Widget Integration
+**Goal:** Inject the beautiful Floating Action Button and Sliding Panel seamlessly into the target Shopify code.
+
+1. **Upload Snippet:** Create the exact `snippets/evangelista-ai-widget.liquid` file in the client's Shopify theme.
+2. **Update Hardcoded Keys:**
+   - Find `vapi_public_key` in the liquid file and change it to the Production Vapi Public Key.
+   - Find `assistant_id` and change it to the Production Assistant ID from the Vapi Dashboard.
+   - Find `var backendUrl = ...` and change it to the Production FastAPI URL.
+3. **Include the Snippet:** Open `layout/theme.liquid` right before `</body>` and inject:
+   ```liquid
+   {% render 'evangelista-ai-widget' %}
+   ```
+4. **Theme Customization Check (Crucial for Cart Refreshes):**
+   - In [evangelista-ai-widget.liquid](file:///c:/Users/muham/My%20Portfolio%20Projects/voice%20agent/PART6_FRONTEND/evangelista-ai-widget.liquid), the `updateThemeCartCount()` function aggressively syncs the native Shopify Cart icon so adding products is perfectly fluid.
+   - The current code looks for `.header__icon--cart` and `#cart-icon-bubble` (which is standard for **Dawn** themes). 
+   - If the client uses a drastically different theme (like Prestige, Impulse, or Symmetry), you must inspect their cart HTML snippet name and update the `fetch('?sections=cart-icon-bubble')` request with their theme's exact cart section ID.
+   
+---
+
+## 6. Real World Product Edge Cases Checklist
+When syncing thousands of products, test these edge cases heavily:
+* **Missing Prices:** Ensure your code gracefully handles products with `$0.00` or blank arrays.
+* **100+ Variants:** If a client sells custom rings with 150 sizes, the side panel button loop might become visually messy or hit Shopify's variants cap. Ensure `renderStage()` truncates the variant display or renders a drop-down instead of floating buttons if variants > 5. (Example: `if (variants.length > 5) { renderSelectBox(); }`)
+* **Out of Stock:** The current code dims and disables "Out of Stock" variants cleanly—ensure real Shopify `available: false` logic maps carefully in their theme!

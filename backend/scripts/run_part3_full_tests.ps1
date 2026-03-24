@@ -1,5 +1,5 @@
 param(
-    [string]$BaseUrl = "http://127.0.0.1:8000",
+    [string]$BaseUrl = "https://muhammadhassan.tech",
     [string]$ShopDomain = "pmcvp2-tv.myshopify.com",
     [string]$ForeignShopDomain = "other-store.myshopify.com",
     [string]$ReindexAdminToken = "",

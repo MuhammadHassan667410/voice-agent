@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     app_env: str = Field(default="local", alias="APP_ENV")
     app_name: str = Field(default="ai-shopify-assistant", alias="APP_NAME")
-    app_base_url: str = Field(default="http://localhost:8000", alias="APP_BASE_URL")
+    app_base_url: str = Field(default="https://muhammadhassan.tech", alias="APP_BASE_URL")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
     cors_allowed_origins: str = Field(default="*", alias="CORS_ALLOWED_ORIGINS")
 

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import logging
+import os
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+import uvicorn
 
 from app.api.routes import router
 from app.core.config import get_settings
@@ -126,3 +128,14 @@ async def handle_unexpected_error(request: Request, exc: Exception):
 
 
 app.include_router(router)
+
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", "8000"))
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=port,
+        proxy_headers=True,
+        forwarded_allow_ips="*",
+    )

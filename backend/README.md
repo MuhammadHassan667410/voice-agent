@@ -7,6 +7,13 @@
 3. Start API from `backend` directory:
    - `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
 
+## Run on Render
+- Root Directory: `backend`
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips="*"`
+
+Render injects `PORT` automatically and terminates TLS at the edge. The proxy-forwarding flags ensure request scheme/client info are forwarded correctly.
+
 ## Implemented in Part 3
 - FastAPI scaffold
 - Config and env loading
